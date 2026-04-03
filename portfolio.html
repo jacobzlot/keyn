@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>KEYN – Portfolio</title>
+<link href="https://fonts.googleapis.com/css2?family=Zain:wght@200;300;400;700;800;900&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/keyn-dashboard.css" />
+<link rel="stylesheet" href="css/portfolio.css" />
+<script src="config.js"></script>
+<script src="yahoo.js"></script>
+</head>
+<body>
+<div class="layout">
+  <div id="keyn-sidebar-host"></div>
+  <div class="right-pane">
+    <div id="keyn-topbar-host"></div>
+    <div class="pp-content">
+      <div class="pp-chart-section">
+        <div class="pp-chart-top">
+          <div class="pp-val-block">
+            <div class="pp-total-label">Total Portfolio Value</div>
+            <div class="pp-total-val" id="pp-total-val">$0.00</div>
+            <div class="pp-day-delta" id="pp-day-delta">—</div>
+          </div>
+          <div class="pp-time-tabs">
+            <span class="pp-tab active" data-range="1D">1D</span>
+            <span class="pp-tab" data-range="1W">1W</span>
+            <span class="pp-tab" data-range="1M">1M</span>
+            <span class="pp-tab" data-range="YTD">YTD</span>
+            <span class="pp-tab" data-range="1Y">1Y</span>
+            <span class="pp-tab" data-range="ALL">ALL</span>
+          </div>
+        </div>
+        <div class="pp-canvas-area" id="pp-canvas-area">
+          <canvas id="pp-canvas"></canvas>
+          <div class="pp-empty-state" id="pp-empty-state">
+            <div class="pp-empty-ring">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(152,188,255,0.6)" stroke-width="1.5">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              </svg>
+            </div>
+            <div class="pp-empty-msg">Your portfolio is empty.<br/>Add your first position to get started.</div>
+            <button class="pp-empty-cta" id="pp-empty-btn">+ Add Stock</button>
+          </div>
+        </div>
+        <div class="pp-stats">
+          <div class="pp-stat-cell">
+            <div class="pp-stat-lbl">Amount Invested</div>
+            <div class="pp-stat-num" id="stat-invested">$0.00</div>
+          </div>
+          <div class="pp-stat-cell">
+            <div class="pp-stat-lbl">Market Value</div>
+            <div class="pp-stat-num" id="stat-mktval">$0.00</div>
+          </div>
+          <div class="pp-stat-cell">
+            <div class="pp-stat-lbl">Total Return</div>
+            <div class="pp-stat-num" id="stat-return">—</div>
+          </div>
+          <div class="pp-stat-cell">
+            <div class="pp-stat-lbl">Day's P&L</div>
+            <div class="pp-stat-num" id="stat-daypnl">—</div>
+          </div>
+          <div class="pp-stat-cell">
+            <div class="pp-stat-lbl">Positions</div>
+            <div class="pp-stat-num" id="stat-count">0</div>
+          </div>
+          <div class="pp-stat-cell">
+            <div class="pp-stat-lbl">Cash / BP</div>
+            <div class="pp-stat-num" id="stat-cash">$0.00</div>
+          </div>
+        </div>
+      </div>
+      <div class="pp-positions">
+        <div class="pp-pos-hdr">
+          <div>
+            <div class="pp-pos-title">Positions</div>
+            <div class="pp-pos-meta" id="pos-meta">No holdings</div>
+          </div>
+          <div class="pp-hdr-right" id="pp-add-btn" title="Add position" style="cursor:pointer;">
+            <svg width="36" height="36" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <g transform="translate(2,2)" fill="#86A6E0" fill-rule="nonzero">
+                <path d="M14.6602,0.0001 C18.0602,0.0001 20.0002,1.9201 20.0002,5.3301 L20.0002,5.3301 L20.0002,14.6701 C20.0002,18.0601 18.0702,20.0001 14.6702,20.0001 L14.6702,20.0001 L5.3302,20.0001 C1.9202,20.0001 0.0002,18.0601 0.0002,14.6701 L0.0002,14.6701 L0.0002,5.3301 C0.0002,1.9201 1.9202,0.0001 5.3302,0.0001 L5.3302,0.0001 Z M9.9902,5.5101 C9.5302,5.5101 9.1602,5.8801 9.1602,6.3401 L9.1602,6.3401 L9.1602,9.1601 L6.3302,9.1601 C6.1102,9.1601 5.9002,9.2501 5.7402,9.4001 C5.5902,9.5601 5.5002,9.7691 5.5002,9.9901 C5.5002,10.4501 5.8702,10.8201 6.3302,10.8301 L6.3302,10.8301 L9.1602,10.8301 L9.1602,13.6601 C9.1602,14.1201 9.5302,14.4901 9.9902,14.4901 C10.4502,14.4901 10.8202,14.1201 10.8202,13.6601 L10.8202,13.6601 L10.8202,10.8301 L13.6602,10.8301 C14.1202,10.8201 14.4902,10.4501 14.4902,9.9901 C14.4902,9.5301 14.1202,9.1601 13.6602,9.1601 L13.6602,9.1601 L10.8202,9.1601 L10.8202,6.3401 C10.8202,5.8801 10.4502,5.5101 9.9902,5.5101 Z"/>
+              </g>
+            </svg>
+          </div>
+        </div>
+        <div class="pp-col-hdr">
+          <span class="pp-col-lbl">Stock</span>
+          <span class="pp-col-lbl">Chart</span>
+          <span class="pp-col-lbl">Value / P&L</span>
+        </div>
+        <div class="pp-list" id="pp-list">
+          <div class="pp-list-empty" id="pp-list-empty">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <line x1="9" y1="9" x2="15" y2="9"/>
+              <line x1="9" y1="12" x2="15" y2="12"/>
+              <line x1="9" y1="15" x2="12" y2="15"/>
+            </svg>
+            <div>No positions yet.<br/>Click <strong>+</strong> to add a stock.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="pp-overlay" id="pp-overlay">
+  <div class="pp-modal">
+    <div class="pp-modal-hdr">
+      <div>
+        <div class="pp-modal-title" id="modal-title">Add Position</div>
+        <div class="pp-modal-sub" id="modal-sub">Enter your stock details below</div>
+      </div>
+      <button class="pp-modal-close" id="modal-close-btn">&#x2715;</button>
+    </div>
+
+    <!-- Mode toggle — only visible in Add mode -->
+    <div class="pp-mode-toggle" id="modal-mode-toggle">
+      <button class="pp-mode-btn active" id="mode-stock-btn">Stock</button>
+      <button class="pp-mode-btn" id="mode-cash-btn">Cash</button>
+    </div>
+
+    <!-- Stock fields -->
+    <div class="pp-fields" id="fields-stock">
+      <div class="pp-field">
+        <label class="pp-field-lbl">Ticker Symbol</label>
+        <input class="pp-field-inp" id="f-ticker" type="text" placeholder="e.g. AAPL" autocomplete="off" spellcheck="false" />
+      </div>
+      <div class="pp-field-row">
+        <div class="pp-field">
+          <label class="pp-field-lbl">Shares Owned</label>
+          <input class="pp-field-inp" id="f-shares" type="number" placeholder="e.g. 10" min="0.001" step="any" />
+        </div>
+        <div class="pp-field">
+          <label class="pp-field-lbl">Avg Cost / Share</label>
+          <input class="pp-field-inp" id="f-avg" type="number" placeholder="e.g. 150.00" min="0.01" step="any" />
+        </div>
+      </div>
+      <div class="pp-field">
+        <label class="pp-field-lbl">Date of Purchase</label>
+        <input class="pp-field-inp" id="f-date" type="text" placeholder="MM/DD/YYYY" maxlength="10" inputmode="numeric" autocomplete="off" />
+        <div class="pp-field-hint">Sets the start of the ALL chart view for your portfolio</div>
+      </div>
+
+      <!-- Sell section — only visible in Edit mode -->
+      <div class="pp-sell-section" id="sell-section">
+        <div class="pp-sell-divider">Record a Sale</div>
+        <div class="pp-field-row">
+          <div class="pp-field">
+            <label class="pp-field-lbl">Shares to Sell</label>
+            <input class="pp-field-inp" id="f-sell-shares" type="number" placeholder="e.g. 5" min="0.001" step="any" />
+          </div>
+          <div class="pp-field">
+            <label class="pp-field-lbl">Sale Price / Share</label>
+            <input class="pp-field-inp" id="f-sell-price" type="number" placeholder="e.g. 18.50" min="0.01" step="any" />
+          </div>
+        </div>
+        <div class="pp-field-hint">Proceeds are added to your Cash / BP balance</div>
+      </div>
+    </div>
+
+    <!-- Cash fields -->
+    <div class="pp-fields" id="fields-cash" style="display:none;">
+      <div class="pp-field">
+        <label class="pp-field-lbl">Amount</label>
+        <input class="pp-field-inp" id="f-cash-amt" type="number" placeholder="e.g. 5000.00" min="0.01" step="any" />
+        <div class="pp-field-hint">Adds to your available buying power balance</div>
+      </div>
+    </div>
+
+    <div class="pp-modal-err" id="modal-err"></div>
+    <div class="pp-modal-btns">
+      <button class="pp-btn-cancel" id="modal-cancel-btn">Cancel</button>
+      <button class="pp-btn-delete" id="modal-delete-btn">Delete</button>
+      <button class="pp-btn-submit" id="modal-submit-btn">Add to Portfolio</button>
+    </div>
+  </div>
+</div>
+
+<script src="partials/keyn-partials.js"></script>
+<script src="partials/keyn-portfolio.js"></script>
+</body>
+</html>

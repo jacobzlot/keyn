@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>KEYN — Commodity Live Data Test</title>
+<link href="https://fonts.googleapis.com/css2?family=Zain:wght@400;700;900&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:     #0d0d17;
+    --panel:  #202931;
+    --accent: #98bcff;
+    --green:  #2bff00;
+    --red:    #ff1a1a;
+  }
+
+  body {
+    background: var(--bg);
+    color: #fff;
+    font-family: 'Zain', sans-serif;
+    padding: 40px 32px;
+    min-height: 100vh;
+  }
+
+  h1 { font-size: 32px; font-weight: 900; color: var(--accent); margin-bottom: 4px; letter-spacing: -1px; }
+  .subtitle { font-size: 14px; color: rgba(255,255,255,0.4); margin-bottom: 32px; }
+
+  /* ── DEBUG LOG ── */
+  #log {
+    background: #111820;
+    border: 1px solid rgba(152,188,255,0.12);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 32px;
+    font-size: 12px;
+    font-family: monospace;
+    color: rgba(255,255,255,0.55);
+    max-height: 160px;
+    overflow-y: auto;
+    line-height: 1.6;
+  }
+  #log .ok  { color: #2bff00; }
+  #log .err { color: #ff4444; }
+  #log .inf { color: var(--accent); }
+
+  /* ── GRID OF COMMODITY CARDS ── */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+  }
+
+  .comm-card {
+    background: var(--panel);
+    border-radius: 10px;
+    padding: 16px;
+    border: 1px solid rgba(152,188,255,0.08);
+    position: relative;
+    transition: border-color 0.2s;
+  }
+  .comm-card.live  { border-color: rgba(43,255,0,0.25); }
+  .comm-card.error { border-color: rgba(255,68,68,0.2); }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+
+  .card-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .card-symbol {
+    font-size: 11px;
+    color: rgba(255,255,255,0.3);
+    font-family: monospace;
+    margin-top: 2px;
+  }
+
+  .card-price-col { text-align: right; }
+  .card-price {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .card-delta {
+    font-size: 12px;
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    justify-content: flex-end;
+  }
+  .up { color: var(--green); }
+  .dn { color: var(--red); }
+
+  /* Canvas chart */
+  .card-chart {
+    width: 100%;
+    height: 80px;
+    position: relative;
+    cursor: crosshair;
+    margin-bottom: 8px;
+  }
+  canvas { display: block; }
+
+  /* Status badge */
+  .card-status {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 20px;
+    letter-spacing: 0.3px;
+  }
+  .badge-live    { background: rgba(43,255,0,0.15);  color: var(--green); }
+  .badge-loading { background: rgba(152,188,255,0.1); color: var(--accent); }
+  .badge-static  { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.4); }
+  .badge-error   { background: rgba(255,68,68,0.12); color: #ff6666; }
+
+  /* Hover tooltip */
+  .card-hover-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    text-align: center;
+    min-height: 16px;
+  }
+
+  /* Data points count */
+  .card-meta {
+    font-size: 10px;
+    color: rgba(255,255,255,0.2);
+    font-family: monospace;
+    margin-top: 4px;
+  }
+
+  /* Spinner */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(152,188,255,0.15);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 4px;
+  }
+
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.35);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 28px 0 12px;
+  }
+</style>
+</head>
+<body>
+
+<h1>keyn — commodity live data test</h1>
+<p class="subtitle">Each card fetches real intraday data from Yahoo Finance. Green border = live. Check the log for details.</p>
+
+<div id="log"><span class="inf">Initialising…</span></div>
+
+<div class="section-title">Metals</div>
+<div class="cards-grid" id="grid-metals"></div>
+
+<div class="section-title">Energy</div>
+<div class="cards-grid" id="grid-energy"></div>
+
+<div class="section-title">Agriculture</div>
+<div class="cards-grid" id="grid-agri"></div>
+
+<div class="section-title">Crypto</div>
+<div class="cards-grid" id="grid-crypto"></div>
+
+<script>
+// ── Config ────────────────────────────────────────────────────────────────────
+const IS_LOCAL   = ['localhost','127.0.0.1'].includes(location.hostname);
+const YH_BASE    = 'https://query1.finance.yahoo.com';
+const CORS_PROXY = 'https://corsproxy.io/?'; // free CORS proxy for local dev
+const PROX_BASE  = '/api/yahoo';             // Vercel serverless proxy for production
+
+// ── All commodity symbols ─────────────────────────────────────────────────────
+const CATEGORIES = {
+  metals: [
+    { name:'Gold',        symbol:'GC=F'    },
+    { name:'Silver',      symbol:'SI=F'    },
+    { name:'Platinum',    symbol:'PL=F'    },
+    { name:'Copper',      symbol:'HG=F'    },
+  ],
+  energy: [
+    { name:'Crude Oil',   symbol:'CL=F'    },
+    { name:'Natural Gas', symbol:'NG=F'    },
+    { name:'Gasoline',    symbol:'RB=F'    },
+    { name:'Heating Oil', symbol:'HO=F'    },
+  ],
+  agri: [
+    { name:'Wheat',       symbol:'ZW=F'    },
+    { name:'Corn',        symbol:'ZC=F'    },
+    { name:'Soybeans',    symbol:'ZS=F'    },
+    { name:'Sugar',       symbol:'SB=F'    },
+  ],
+  crypto: [
+    { name:'Bitcoin',     symbol:'BTC-USD' },
+    { name:'Ethereum',    symbol:'ETH-USD' },
+    { name:'Solana',      symbol:'SOL-USD' },
+    { name:'XRP',         symbol:'XRP-USD' },
+  ],
+};
+
+// ── Logging ───────────────────────────────────────────────────────────────────
+const logEl = document.getElementById('log');
+function log(msg, type) {
+  const line = document.createElement('div');
+  line.className = type || '';
+  line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+// ── Yahoo fetch ───────────────────────────────────────────────────────────────
+// localhost  → corsproxy.io wraps Yahoo URL (bypasses browser CORS restriction)
+// production → /api/yahoo Vercel serverless function (server-side, no CORS issue)
+async function yahooFetch(symbol) {
+  const path   = `/v8/finance/chart/${encodeURIComponent(symbol)}`;
+  const params = `interval=5m&range=1d&includePrePost=false`;
+  const target = `${YH_BASE}${path}?${params}`;
+
+  const url = IS_LOCAL
+    ? `${CORS_PROXY}${encodeURIComponent(target)}`
+    : `${PROX_BASE}?path=${encodeURIComponent(path)}&${params}`;
+
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+// ── Parse Yahoo response into usable chart data ───────────────────────────────
+function parseYahooChart(data) {
+  const result = data?.chart?.result?.[0];
+  if (!result) throw new Error('No result in response');
+
+  const meta     = result.meta || {};
+  const rawTS    = result.timestamp || [];
+  const rawClose = result.indicators?.quote?.[0]?.close || [];
+  const tz       = meta.exchangeTimezoneName || 'America/New_York';
+
+  const pairs = rawTS
+    .map((ts, i) => ({ ts, price: rawClose[i] }))
+    .filter(p => p.price != null && !isNaN(p.price));
+
+  if (pairs.length < 2) throw new Error(`Only ${pairs.length} valid candles`);
+
+  const prices = pairs.map(p => p.price);
+  const times  = pairs.map(p =>
+    new Date(p.ts * 1000).toLocaleTimeString('en-US', {
+      hour: '2-digit', minute: '2-digit', hour12: false, timeZone: tz,
+    })
+  );
+
+  const open         = meta.chartPreviousClose ?? meta.regularMarketOpen ?? prices[0];
+  const currentPrice = meta.regularMarketPrice ?? prices[prices.length - 1];
+
+  return { prices, times, open, currentPrice, candles: pairs.length };
+}
+
+// ── Format helpers ─────────────────────────────────────────────────────────────
+function fmtPrice(v) {
+  if (v >= 10000) return v.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
+  if (v >= 1000)  return v.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
+  if (v < 10)     return v.toFixed(4);
+  return v.toFixed(2);
+}
+function fmtDelta(cur, open) {
+  const abs  = cur - open;
+  const pct  = (abs / open) * 100;
+  const sign = abs >= 0 ? '+' : '';
+  return `${sign}$${Math.abs(abs).toFixed(2)} (${sign}${pct.toFixed(2)}%)`;
+}
+
+// ── Draw area chart on canvas ──────────────────────────────────────────────────
+function drawChart(canvas, prices, isUp, hoverIdx) {
+  const wrap = canvas.parentElement;
+  const W    = wrap.clientWidth;
+  const H    = wrap.clientHeight || 80;
+  if (!W || !H || prices.length < 2) return;
+
+  const DPR  = window.devicePixelRatio || 1;
+  canvas.width  = W * DPR;
+  canvas.height = H * DPR;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+
+  const ctx = canvas.getContext('2d');
+  ctx.scale(DPR, DPR);
+
+  const n    = prices.length;
+  const min  = Math.min(...prices) * 0.998;
+  const max  = Math.max(...prices) * 1.002;
+  const PL=4, PR=4, PT=6, PB=12;
+
+  function xOf(i) { return PL + (i / (n-1)) * (W - PL - PR); }
+  function yOf(v) { return PT + (1 - (v - min) / (max - min)) * (H - PT - PB); }
+
+  const lineColor = isUp ? '#2bff00' : '#ff1a1a';
+
+  // Area fill
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0,   isUp ? 'rgba(43,255,0,0.45)'  : 'rgba(255,26,26,0.45)');
+  grad.addColorStop(0.6, isUp ? 'rgba(43,255,0,0.10)'  : 'rgba(255,26,26,0.10)');
+  grad.addColorStop(1,   'rgba(0,0,0,0)');
+
+  ctx.beginPath();
+  ctx.moveTo(xOf(0), yOf(prices[0]));
+  for (let i = 1; i < n; i++) {
+    const mx = (xOf(i-1) + xOf(i)) / 2;
+    ctx.bezierCurveTo(mx, yOf(prices[i-1]), mx, yOf(prices[i]), xOf(i), yOf(prices[i]));
+  }
+  ctx.lineTo(xOf(n-1), H); ctx.lineTo(xOf(0), H); ctx.closePath();
+  ctx.fillStyle = grad; ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  ctx.moveTo(xOf(0), yOf(prices[0]));
+  for (let i = 1; i < n; i++) {
+    const mx = (xOf(i-1) + xOf(i)) / 2;
+    ctx.bezierCurveTo(mx, yOf(prices[i-1]), mx, yOf(prices[i]), xOf(i), yOf(prices[i]));
+  }
+  ctx.strokeStyle = lineColor; ctx.lineWidth = 1.5; ctx.stroke();
+
+  // Hover
+  if (hoverIdx !== null && hoverIdx !== undefined) {
+    const hx = xOf(hoverIdx);
+    const hy = yOf(prices[hoverIdx]);
+    ctx.beginPath(); ctx.setLineDash([3,3]);
+    ctx.moveTo(hx, PT); ctx.lineTo(hx, H - PB);
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(hx, hy, 4, 0, Math.PI*2);
+    ctx.fillStyle = lineColor; ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+  }
+}
+
+// ── Build one card ─────────────────────────────────────────────────────────────
+function buildCard(item) {
+  const card = document.createElement('div');
+  card.className = 'comm-card';
+  card.id = `card-${item.symbol.replace(/[^a-z0-9]/gi,'-')}`;
+
+  card.innerHTML = `
+    <span class="card-status badge-loading" id="badge-${card.id}">
+      <span class="spinner"></span>Loading
+    </span>
+    <div class="card-header">
+      <div>
+        <div class="card-name">${item.name}</div>
+        <div class="card-symbol">${item.symbol}</div>
+      </div>
+      <div class="card-price-col">
+        <div class="card-price" id="price-${card.id}">—</div>
+        <div class="card-delta" id="delta-${card.id}">—</div>
+      </div>
+    </div>
+    <div class="card-chart" id="wrap-${card.id}">
+      <canvas id="canvas-${card.id}"></canvas>
+    </div>
+    <div class="card-hover-label" id="hover-${card.id}"></div>
+    <div class="card-meta" id="meta-${card.id}"></div>
+  `;
+  return card;
+}
+
+// ── Load live data into a card ─────────────────────────────────────────────────
+async function loadCard(item) {
+  const cid      = `card-${item.symbol.replace(/[^a-z0-9]/gi,'-')}`;
+  const card     = document.getElementById(cid);
+  const badge    = document.getElementById(`badge-${cid}`);
+  const priceEl  = document.getElementById(`price-${cid}`);
+  const deltaEl  = document.getElementById(`delta-${cid}`);
+  const metaEl   = document.getElementById(`meta-${cid}`);
+  const hoverEl  = document.getElementById(`hover-${cid}`);
+  const chartWrap= document.getElementById(`wrap-${cid}`);
+  const canvas   = document.getElementById(`canvas-${cid}`);
+
+  log(`Fetching ${item.symbol} (${item.name})…`, 'inf');
+
+  try {
+    const raw  = await yahooFetch(item.symbol);
+    const live = parseYahooChart(raw);
+
+    const isUp = live.currentPrice >= live.open;
+    const dir  = isUp ? 'up' : 'dn';
+
+    // Update price
+    priceEl.textContent = fmtPrice(live.currentPrice);
+    priceEl.className   = `card-price ${dir}`;
+
+    // Update delta
+    deltaEl.innerHTML   = `<span class="${dir}">${isUp ? '▲' : '▼'} ${fmtDelta(live.currentPrice, live.open)}</span>`;
+
+    // Update badge
+    badge.className     = 'card-status badge-live';
+    badge.innerHTML     = '● LIVE';
+
+    // Mark card
+    card.classList.add('live');
+
+    // Meta info
+    metaEl.textContent  = `${live.candles} candles · open ${fmtPrice(live.open)} · interval 5m`;
+
+    // Draw chart
+    requestAnimationFrame(() => {
+      drawChart(canvas, live.prices, isUp, null);
+    });
+
+    // Hover interaction
+    let hoverIdx = null;
+    chartWrap.addEventListener('mousemove', e => {
+      const rect = chartWrap.getBoundingClientRect();
+      const x    = e.clientX - rect.left;
+      const n    = live.prices.length;
+      hoverIdx   = Math.round(Math.max(0, Math.min(n-1, (x / rect.width) * (n-1))));
+      hoverEl.textContent = `${live.times[hoverIdx]}  ${fmtPrice(live.prices[hoverIdx])}`;
+      drawChart(canvas, live.prices, isUp, hoverIdx);
+    });
+    chartWrap.addEventListener('mouseleave', () => {
+      hoverIdx = null;
+      hoverEl.textContent = '';
+      drawChart(canvas, live.prices, isUp, null);
+    });
+
+    log(`✓ ${item.symbol} — ${live.candles} candles, current ${fmtPrice(live.currentPrice)}, open ${fmtPrice(live.open)}`, 'ok');
+
+  } catch (err) {
+    badge.className  = 'card-status badge-error';
+    badge.innerHTML  = '✕ Error';
+    card.classList.add('error');
+    priceEl.textContent = 'N/A';
+    deltaEl.textContent = err.message;
+    metaEl.textContent  = `Failed: ${err.message}`;
+    log(`✗ ${item.symbol} — ${err.message}`, 'err');
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+log(`Mode: ${IS_LOCAL ? 'localhost → corsproxy.io → Yahoo' : 'production → /api/yahoo proxy → Yahoo'}`, 'inf');
+
+Object.entries(CATEGORIES).forEach(([cat, items]) => {
+  const grid = document.getElementById(`grid-${cat}`);
+  items.forEach(item => {
+    const card = buildCard(item);
+    grid.appendChild(card);
+    loadCard(item); // fire immediately, all in parallel
+  });
+});
+</script>
+</body>
+</html>

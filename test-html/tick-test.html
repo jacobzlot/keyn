@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KEYN — Tick Animation Tester</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Zain:wght@300;400;700;800&display=swap');
+
+  /* ── Drum column styles (mirrors home.html) ── */
+  .keyn-drum-col {
+    display: inline-flex;
+    flex-direction: column;
+    height: 1em;
+    will-change: transform;
+  }
+  .keyn-drum-col > span {
+    display: block;
+    height: 1em;
+    line-height: 1em;
+    text-align: center;
+  }
+
+  /* ── Base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:      #0d0d17;
+    --panel:   #202931;
+    --panel2:  #19222a;
+    --border:  #2a3540;
+    --accent:  #98bcff;
+    --green:   #2bff00;
+    --red:     #ff1a1a;
+    --dkgreen: #189400;
+    --dkred:   #a80d0d;
+    --text:    #ffffff;
+    --muted:   #8a9bb0;
+  }
+
+  html, body {
+    width: 100%; min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Zain', sans-serif;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 24px 60px;
+    gap: 36px;
+  }
+
+  /* ── Header ── */
+  .page-header {
+    text-align: center;
+  }
+  .page-header h1 {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: -1px;
+  }
+  .page-header p {
+    color: var(--muted);
+    font-size: 15px;
+    margin-top: 6px;
+  }
+
+  /* ── Ticker cards row ── */
+  .cards-row {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+    max-width: 960px;
+  }
+
+  /* ── Single ticker card (mirrors KEYN index-card style) ── */
+  .ticker-card {
+    background: var(--panel);
+    border-radius: 16px;
+    padding: 20px 24px;
+    min-width: 200px;
+    flex: 1;
+    max-width: 220px;
+    border: 1px solid var(--border);
+    transition: border-color .2s;
+  }
+  .ticker-card.flash-up { border-color: var(--green); }
+  .ticker-card.flash-dn { border-color: var(--red); }
+
+  .tc-label {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 400;
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .tc-price {
+    font-size: 34px;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--text);
+    margin-bottom: 6px;
+    letter-spacing: -1px;
+  }
+  .tc-delta {
+    font-size: 15px;
+    font-weight: 400;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .tc-delta.up { color: var(--green); }
+  .tc-delta.dn { color: var(--red); }
+
+  .tri { font-size: 10px; line-height: 1; }
+
+  /* ── Controls panel ── */
+  .controls-panel {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 32px;
+    width: 100%;
+    max-width: 960px;
+  }
+
+  .controls-panel h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 20px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    font-size: 13px;
+  }
+
+  .controls-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  /* ── Input row ── */
+  .input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .input-row label {
+    font-size: 13px;
+    color: var(--muted);
+    white-space: nowrap;
+    min-width: 64px;
+  }
+
+  .amount-input {
+    background: #111a22;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Zain', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    padding: 8px 12px;
+    width: 110px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .amount-input:focus { border-color: var(--accent); }
+
+  /* ── Buttons ── */
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .btn {
+    border: none;
+    border-radius: 10px;
+    padding: 12px 28px;
+    font-family: 'Zain', sans-serif;
+    font-size: 17px;
+    font-weight: 800;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    transition: transform .1s, opacity .15s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn:active { transform: scale(.96); }
+
+  .btn-up {
+    background: var(--dkgreen);
+    color: #fff;
+    box-shadow: 0 4px 18px rgba(43,255,0,.18);
+  }
+  .btn-up:hover { opacity: .88; }
+
+  .btn-dn {
+    background: var(--dkred);
+    color: #fff;
+    box-shadow: 0 4px 18px rgba(255,26,26,.18);
+  }
+  .btn-dn:hover { opacity: .88; }
+
+  .btn-reset {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    font-size: 14px;
+    padding: 12px 20px;
+  }
+  .btn-reset:hover { border-color: var(--muted); color: var(--text); }
+
+  /* ── Log ── */
+  .log-panel {
+    background: #0a0f14;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    width: 100%;
+    max-width: 960px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    max-height: 180px;
+    overflow-y: auto;
+  }
+  .log-panel h3 {
+    font-family: 'Zain', sans-serif;
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+  }
+  .log-entry {
+    padding: 3px 0;
+    border-bottom: 1px solid #1a2530;
+    color: var(--muted);
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+  }
+  .log-entry:last-child { border-bottom: none; }
+  .log-time  { color: #3d5060; font-size: 11px; min-width: 56px; }
+  .log-sym   { color: var(--accent); font-weight: bold; min-width: 60px; }
+  .log-old   { color: var(--muted); }
+  .log-arrow { color: #3d5060; }
+  .log-new.up { color: var(--green); }
+  .log-new.dn { color: var(--red); }
+  .log-diff.up { color: var(--green); }
+  .log-diff.dn { color: var(--red); }
+
+  /* ── Speed selector ── */
+  .speed-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .speed-row label { font-size: 13px; color: var(--muted); }
+  .speed-btn {
+    background: #111a22;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 6px;
+    padding: 4px 12px;
+    font-family: 'Zain', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .speed-btn.active, .speed-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(152,188,255,.08);
+  }
+
+  /* ── Divider ── */
+  .ctrl-divider {
+    grid-column: 1 / -1;
+    height: 1px;
+    background: var(--border);
+    margin: 4px 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>KEYN Tick Tester</h1>
+  <p>Test the rolling drum digit animation — slot-machine style columns, 9→0 stacked</p>
+</div>
+
+<!-- Live ticker cards -->
+<div class="cards-row" id="cards-row">
+  <!-- Populated by JS -->
+</div>
+
+<!-- Controls -->
+<div class="controls-panel">
+  <h2>⚙ Controls</h2>
+  <div class="controls-grid">
+    <div class="input-row">
+      <label>Symbol</label>
+      <select id="target-sym" class="amount-input" style="width:130px">
+        <option value="ALL">All tickers</option>
+      </select>
+    </div>
+    <div class="input-row">
+      <label>Amount $</label>
+      <input id="change-amt" class="amount-input" type="number" value="1.50" min="0.01" step="0.01" />
+    </div>
+    <div class="ctrl-divider"></div>
+    <div class="input-row" style="grid-column:1/-1">
+      <label>Speed</label>
+      <div style="display:flex;gap:8px">
+        <button class="speed-btn" data-dur="0.15">Fast</button>
+        <button class="speed-btn active" data-dur="0.28">Normal</button>
+        <button class="speed-btn" data-dur="0.55">Slow</button>
+        <button class="speed-btn" data-dur="1.1">Very slow</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-up" id="btn-up">▲ Price Up</button>
+    <button class="btn btn-dn" id="btn-dn">▼ Price Down</button>
+    <button class="btn btn-reset" id="btn-reset">↺ Reset</button>
+    <button class="btn btn-reset" id="btn-auto" style="border-color:#3d5060">⏱ Auto (every 5s)</button>
+  </div>
+</div>
+
+<!-- Event log -->
+<div class="log-panel">
+  <h3>Event Log</h3>
+  <div id="log-entries"></div>
+</div>
+
+<script>
+// ── Ticker definitions ───────────────────────────────────────────────────────
+const TICKERS = [
+  { sym: 'AAPL',  name: 'Apple Inc.',         price: 172.43  },
+  { sym: 'TSLA',  name: 'Tesla Inc.',          price: 248.11  },
+  { sym: 'NVDA',  name: 'NVIDIA Corp.',        price: 870.39  },
+  { sym: 'SPX',   name: 'S&P 500 Index',       price: 5243.77 },
+  { sym: 'GC=F',  name: 'Gold Futures',        price: 2384.60 },
+  { sym: 'BTC',   name: 'Bitcoin USD',         price: 62840.00},
+];
+
+// State
+const state = {};       // sym → { price, open }
+TICKERS.forEach(t => {
+  state[t.sym] = { price: t.price, open: t.price };
+});
+
+// Animation duration (seconds) — adjustable via speed buttons
+let animDur = 0.28;
+
+// Auto-update interval handle
+let autoTimer = null;
+let autoRunning = false;
+
+// ── Drum engine (mirrors home.html) ──────────────────────────────────────────
+let DRUM_SPEED = '0.5s';
+const DRUM_EASE = 'cubic-bezier(0.72, 0.01, 0.30, 1)';
+
+(function() {
+  function makeColumn(digitChar, instant) {
+    const col = document.createElement('span');
+    col.className = 'keyn-drum-col';
+    col.style.display = 'inline-flex';
+    col.style.flexDirection = 'column';
+    col.style.height = '1em';
+    col.style.willChange = 'transform';
+    col.style.transition = instant ? 'none' : `transform ${DRUM_SPEED} ${DRUM_EASE}`;
+    '9876543210'.split('').forEach(d => {
+      const cell = document.createElement('span');
+      cell.textContent = d;
+      cell.style.cssText = 'display:block;height:1em;line-height:1em;text-align:center;';
+      col.appendChild(cell);
+    });
+    positionColumn(col, parseInt(digitChar, 10), true);
+    return col;
+  }
+
+  function makeStatic(ch) {
+    const span = document.createElement('span');
+    span.style.display = 'inline-block';
+    span.style.lineHeight = '1em';
+    span.textContent = ch;
+    return span;
+  }
+
+  function positionColumn(col, digitInt, instant) {
+    const idx = 9 - digitInt;
+    if (instant) {
+      const saved = col.style.transition;
+      col.style.transition = 'none';
+      col.style.transform = `translateY(${-idx}em)`;
+      col.offsetHeight;
+      col.style.transition = saved;
+    } else {
+      col.style.transform = `translateY(${-idx}em)`;
+    }
+  }
+
+  function build(el, str, instant) {
+    el.innerHTML = '';
+    el.style.display = 'inline-flex';
+    el.style.overflow = 'hidden';
+    el.style.verticalAlign = 'bottom';
+    el.style.lineHeight = '1em';
+    el._drumEntries = [];
+    str.split('').forEach(ch => {
+      const isDigit = /\d/.test(ch);
+      if (isDigit) {
+        const col = makeColumn(ch, instant);
+        el.appendChild(col);
+        el._drumEntries.push({ ch, col, isDigit: true });
+      } else {
+        const stat = makeStatic(ch);
+        el.appendChild(stat);
+        el._drumEntries.push({ ch, col: stat, isDigit: false });
+      }
+    });
+    el.dataset.tickVal = str;
+  }
+
+  function update(el, newStr, instant) {
+    const entries  = el._drumEntries;
+    const newChars = newStr.split('');
+    const sameShape = newChars.length === entries.length &&
+      newChars.every((c, i) => /\d/.test(c) === entries[i].isDigit);
+    if (!sameShape) { build(el, newStr, instant); return; }
+    newChars.forEach((ch, i) => {
+      const entry = entries[i];
+      if (entry.ch === ch) return;
+      entry.ch = ch;
+      if (entry.isDigit) {
+        entry.col.style.transition = instant ? 'none' : `transform ${DRUM_SPEED} ${DRUM_EASE}`;
+        positionColumn(entry.col, parseInt(ch, 10), instant);
+      } else {
+        entry.col.textContent = ch;
+      }
+    });
+    el.dataset.tickVal = newStr;
+  }
+
+  window.tickValue = function(el, newStr, instant) {
+    if (el.dataset.tickVal === newStr) return;
+    if (!el._drumEntries) build(el, newStr, !!instant);
+    else update(el, newStr, !!instant);
+  };
+})();
+
+
+// ── Format helpers ────────────────────────────────────────────────────────────
+function fmt(val) {
+  if (val >= 10000) return val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (val >= 1000)  return val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (val < 10)     return val.toFixed(3);
+  return val.toFixed(2);
+}
+
+function fmtDelta(cur, open) {
+  const abs = cur - open;
+  const pct = (abs / open) * 100;
+  const sign = abs >= 0 ? '+' : '';
+  return `${sign}${abs.toFixed(2)} (${sign}${pct.toFixed(2)}%)`;
+}
+
+// ── Build cards ───────────────────────────────────────────────────────────────
+function buildCards() {
+  const row = document.getElementById('cards-row');
+  row.innerHTML = '';
+
+  const sel = document.getElementById('target-sym');
+  sel.innerHTML = '<option value="ALL">All tickers</option>';
+
+  TICKERS.forEach(t => {
+    const s = state[t.sym];
+    const isUp = s.price >= s.open;
+    const dir  = isUp ? 'up' : 'dn';
+
+    // Card
+    const card = document.createElement('div');
+    card.className   = 'ticker-card';
+    card.id          = `card-${t.sym}`;
+    card.innerHTML   = `
+      <div class="tc-label">${t.sym} · ${t.name}</div>
+      <div class="tc-price" id="price-${t.sym}">${fmt(s.price)}</div>
+      <div class="tc-delta ${dir}" id="delta-${t.sym}">
+        <span class="tri">${isUp ? '▲' : '▼'}</span>
+        <span>${fmtDelta(s.price, s.open)}</span>
+      </div>
+    `;
+    row.appendChild(card);
+
+    // Init drum (instant — no roll on first paint)
+    const priceEl = card.querySelector(`#price-${t.sym}`);
+    tickValue(priceEl, fmt(s.price), true);
+
+    // Selector option
+    const opt = document.createElement('option');
+    opt.value       = t.sym;
+    opt.textContent = `${t.sym} — ${t.name}`;
+    sel.appendChild(opt);
+  });
+}
+
+// ── Update a single ticker with animation ────────────────────────────────────
+function applyChange(sym, delta) {
+  const s   = state[sym];
+  const old = s.price;
+  s.price   = Math.max(0.001, s.price + delta);
+
+  const isUp   = delta >= 0;
+  const vsOpen = s.price >= s.open;
+  const clsDir = vsOpen ? 'up' : 'dn';
+
+  const priceEl = document.getElementById(`price-${sym}`);
+  const deltaEl = document.getElementById(`delta-${sym}`);
+  const card    = document.getElementById(`card-${sym}`);
+
+  // Drum-animate price (instant=false → rolls)
+  tickValue(priceEl, fmt(s.price), false);
+
+  deltaEl.className = `tc-delta ${clsDir}`;
+  deltaEl.innerHTML = `
+    <span class="tri">${vsOpen ? '▲' : '▼'}</span>
+    <span>${fmtDelta(s.price, s.open)}</span>
+  `;
+
+  card.classList.remove('flash-up', 'flash-dn');
+  void card.offsetWidth;
+  card.classList.add(isUp ? 'flash-up' : 'flash-dn');
+  setTimeout(() => card.classList.remove('flash-up', 'flash-dn'), 600);
+
+  addLog(sym, old, s.price, delta);
+}
+
+// ── Apply change to target(s) ─────────────────────────────────────────────────
+function fireChange(direction) {
+  const amt = parseFloat(document.getElementById('change-amt').value) || 1;
+  const delta = direction * amt;
+  const sym   = document.getElementById('target-sym').value;
+
+  if (sym === 'ALL') {
+    TICKERS.forEach(t => applyChange(t.sym, delta));
+  } else {
+    applyChange(sym, delta);
+  }
+}
+
+// ── Log ───────────────────────────────────────────────────────────────────────
+function addLog(sym, oldVal, newVal, delta) {
+  const container = document.getElementById('log-entries');
+  const isUp  = delta >= 0;
+  const dir   = isUp ? 'up' : 'dn';
+  const sign  = isUp ? '+' : '';
+  const now   = new Date().toLocaleTimeString('en-US', { hour12: false });
+
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.innerHTML = `
+    <span class="log-time">${now}</span>
+    <span class="log-sym">${sym}</span>
+    <span class="log-old">${fmt(oldVal)}</span>
+    <span class="log-arrow">→</span>
+    <span class="log-new ${dir}">${fmt(newVal)}</span>
+    <span class="log-diff ${dir}">(${sign}${Math.abs(delta).toFixed(2)})</span>
+  `;
+  container.prepend(entry);
+
+  // Keep log at 50 entries max
+  while (container.children.length > 50) container.lastChild.remove();
+}
+
+// ── Reset ─────────────────────────────────────────────────────────────────────
+function resetAll() {
+  TICKERS.forEach(t => { state[t.sym] = { price: t.price, open: t.price }; });
+  buildCards();
+  document.getElementById('log-entries').innerHTML = '';
+}
+
+// ── Auto mode ─────────────────────────────────────────────────────────────────
+function toggleAuto() {
+  const btn = document.getElementById('btn-auto');
+  if (autoRunning) {
+    clearInterval(autoTimer);
+    autoTimer   = null;
+    autoRunning = false;
+    btn.textContent = '⏱ Auto (every 5s)';
+    btn.style.borderColor = '#3d5060';
+  } else {
+    autoRunning = true;
+    btn.textContent = '⏹ Stop Auto';
+    btn.style.borderColor = '#f0b429';
+    btn.style.color = '#f0b429';
+    autoTimer = setInterval(() => {
+      const amt = parseFloat(document.getElementById('change-amt').value) || 1;
+      const sym = document.getElementById('target-sym').value;
+      const targets = sym === 'ALL' ? TICKERS.map(t => t.sym) : [sym];
+      targets.forEach(s => {
+        // Random up or down, weighted slightly toward up (60/40)
+        const dir   = Math.random() < 0.6 ? 1 : -1;
+        const jitter = (0.5 + Math.random() * 1.5); // vary the amount a bit
+        applyChange(s, dir * amt * jitter);
+      });
+    }, 5000);
+  }
+  if (!autoRunning) { btn.style.color = ''; }
+}
+
+// ── Speed buttons ─────────────────────────────────────────────────────────────
+document.querySelectorAll('.speed-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    DRUM_SPEED = btn.dataset.dur + 's'; // update the drum engine's transition duration
+  });
+});
+
+// ── Wire buttons ──────────────────────────────────────────────────────────────
+document.getElementById('btn-up').addEventListener('click',    () => fireChange(+1));
+document.getElementById('btn-dn').addEventListener('click',    () => fireChange(-1));
+document.getElementById('btn-reset').addEventListener('click', resetAll);
+document.getElementById('btn-auto').addEventListener('click',  toggleAuto);
+
+// Keyboard shortcuts: ↑ / ↓ arrows
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.key === 'ArrowUp')   { e.preventDefault(); fireChange(+1); }
+  if (e.key === 'ArrowDown') { e.preventDefault(); fireChange(-1); }
+  if (e.key === 'r' || e.key === 'R') resetAll();
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+buildCards();
+</script>
+</body>
+</html>

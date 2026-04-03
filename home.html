@@ -1,0 +1,2008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>KEYN – Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Zain:wght@200;300;400;700;800;900&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/keyn-dashboard.css" />
+<script src="config.js"></script>
+<script src="yahoo.js"></script>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ── SIDEBAR (injected by partials/keyn-partials.js) ── -->
+  <div id="keyn-sidebar-host"></div>
+
+  <!-- ── RIGHT PANE ── -->
+  <div class="right-pane">
+
+    <!-- TOP BAR (injected by partials/keyn-partials.js) -->
+    <div id="keyn-topbar-host"></div>
+
+    <!-- INDEX BAR -->
+    <div class="index-bar">
+      <div class="flag-wrap" id="flag-wrap">
+        <img id="active-flag" src="svg/usa.svg" alt="United States" class="active-flag-img" />
+        <div id="region-picker" style="display:none;position:absolute;top:50%;transform:translateY(-50%);left:calc(100% + 12px);background:#1a1f27;border-radius:14px;padding:8px 12px;flex-direction:row;gap:8px;align-items:center;z-index:999;box-shadow:0 8px 32px rgba(0,0,0,0.6);white-space:nowrap;border:1px solid rgba(152,188,255,0.12);"></div>
+      </div>
+
+      <div class="ticker-divider"></div>
+
+      <!-- Scrolling ticker — populated dynamically from /api/regions -->
+      <div class="ticker-viewport">
+        <div class="ticker-track" id="ticker-track"></div>
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+
+      <!-- SHORT SECTIONS ROW -->
+      <div class="short-row">
+
+        <!-- Commodities (Gold) -->
+        <div class="commodity-card" id="commodity-card">
+          <div class="commodity-tabs" id="commodity-tabs">
+            <button class="commodity-tab active" data-tab="metals">
+              <img src="svg/Gem Active.svg"    data-active="svg/Gem Active.svg"    data-inactive="svg/Gem Inactive.svg"    alt="Metals" />
+            </button>
+            <button class="commodity-tab" data-tab="energy">
+              <img src="svg/Energy Inactive.svg" data-active="svg/Energy Active.svg" data-inactive="svg/Energy Inactive.svg" alt="Energy" />
+            </button>
+            <button class="commodity-tab" data-tab="agri">
+              <img src="svg/Bread Inactive.svg"  data-active="svg/Bread Active.svg"  data-inactive="svg/Bread Inactive.svg"  alt="Agriculture" />
+            </button>
+            <button class="commodity-tab" data-tab="crypto">
+              <img src="svg/Bitcoin Inactive.svg" data-active="svg/Bitcoin Active.svg" data-inactive="svg/Bitcoin Inactive.svg" alt="Crypto" />
+            </button>
+          </div>
+          <div class="commodity-body">
+            <div class="commodity-header">
+              <span class="commodity-name" id="commodity-name">Gold</span>
+              <div class="commodity-price-col">
+                <span class="commodity-price color-up" id="commodity-price">5,061.70</span>
+                <div class="commodity-delta color-up" id="commodity-delta">
+                  <img src="svg/triangle-up.svg" class="tri-svg-up" alt="up" />
+                  <span id="commodity-delta-text">$64.10 (1.25%)</span>
+                </div>
+              </div>
+            </div>
+            <div class="commodity-chart" id="commodity-chart-wrap">
+              <canvas id="commodity-canvas" ></canvas>
+            </div>
+            <div class="carousel-nav" id="commodity-carousel-nav">
+              <button class="carousel-arrow" id="commodity-prev" aria-label="Previous"><svg width="9" height="10" viewBox="0 0 16 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0.802287 10.1317L12.5856 17.19C12.8376 17.3355 13.1234 17.4125 13.4144 17.4134C13.7054 17.4142 13.9916 17.3388 14.2444 17.1947C14.4972 17.0506 14.7079 16.8427 14.8555 16.5919C15.0031 16.3411 15.0824 16.056 15.0856 15.765L15.0856 1.64835C15.0824 1.35735 15.0031 1.07226 14.8555 0.821443C14.7079 0.570624 14.4972 0.362821 14.2444 0.218708C13.9916 0.0745951 13.7054 -0.000804896 13.4144 9.95191e-06C13.1234 0.0008248 12.8376 0.0778259 12.5856 0.223353L0.802287 7.28169C0.557375 7.43024 0.354886 7.63942 0.214356 7.88902C0.0738266 8.13863 0 8.42024 0 8.70669C0 8.99313 0.0738266 9.27474 0.214356 9.52435C0.354886 9.77395 0.557375 9.98313 0.802287 10.1317Z" fill="white" opacity="0.6"/></svg></button>
+              <div class="carousel-progress" id="commodity-progress">
+                <div class="carousel-dot-pill" id="commodity-pill"></div>
+                <div class="carousel-dot-inactive"></div>
+                <div class="carousel-dot-inactive"></div>
+                <div class="carousel-dot-inactive"></div>
+              </div>
+              <button class="carousel-arrow" id="commodity-next" aria-label="Next"><svg width="9" height="10" viewBox="0 0 19 21" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.14 12.158L2.99998 20.628C2.69756 20.8027 2.35468 20.8951 2.00546 20.896C1.65624 20.897 1.31285 20.8065 1.00945 20.6336C0.706057 20.4607 0.45323 20.2113 0.276127 19.9103C0.0990238 19.6093 0.0038147 19.2672 -2.28882e-05 18.918L-2.28882e-05 1.97802C0.0038147 1.62882 0.0990238 1.28671 0.276127 0.985731C0.45323 0.68475 0.706057 0.435385 1.00945 0.262449C1.31285 0.0895138 1.65624 -0.000967026 2.00546 1.14441e-05C2.35468 0.000989914 2.69756 0.0933914 2.99998 0.268023L17.14 8.73802C17.4339 8.91629 17.6769 9.1673 17.8455 9.46683C18.0141 9.76635 18.1027 10.1043 18.1027 10.448C18.1027 10.7918 18.0141 11.1297 17.8455 11.4292C17.6769 11.7287 17.4339 11.9798 17.14 12.158Z" fill="white" opacity="0.6"/></svg></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- F&G Meter (interactive) -->
+        <div class="meter-card" id="meter-card">
+          <div class="meter-header">
+            <span class="meter-title" id="meter-title">F&amp;G</span>
+            <div class="meter-info-wrap">
+              <img src="svg/Info Icon.svg" class="meter-info-icon" alt="info" />
+              <div class="meter-tooltip" id="meter-tooltip"></div>
+            </div>
+          </div>
+          <div class="meter-gauge-wrap">
+            <div class="mtr" id="mtr">
+              <div class="seg-wrap" id="seg0" style="width:68.521px;height:70.711px;left:0;top:calc(50% + 15.64px);transform:translateY(-50%);">
+                <svg xmlns="http://www.w3.org/2000/svg" width="69" height="71" viewBox="0 0 69 71" fill="none" class="seg-svg">
+                  <path class="seg-path" d="M67.1113 38.8994C59.1146 47.2108 54.5382 58.2055 54.2871 69.7109H1.00684C1.26597 44.1482 11.4539 19.6733 29.4395 1.41504L67.1113 38.8994Z" fill="url(#g0)" stroke="#202931" stroke-width="2.5"/>
+                  <defs><linearGradient id="g0" x1="199" y1="68.7107" x2="2.00001" y2="68.7107" gradientUnits="userSpaceOnUse"><stop stop-color="#2BFF00"/><stop offset="1" stop-color="#FF1A1A"/></linearGradient></defs>
+                </svg>
+              </div>
+              <div class="seg-wrap" id="seg1" style="width:63.989px;height:66.949px;left:29.44px;top:calc(50% - 14.29px);transform:translateY(-50%);">
+                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="67" viewBox="0 0 64 67" fill="none" class="seg-svg">
+                  <path class="seg-path" d="M62.8457 53.502C53.9123 55.108 45.651 59.2971 39.0938 65.5459L1.4209 28.0615C15.9387 13.9054 34.4676 4.51189 54.5127 1.14746L62.8457 53.502Z" fill="url(#g1)" stroke="#202931" stroke-width="2.5"/>
+                  <defs><linearGradient id="g1" x1="169.564" y1="96.7689" x2="-27.4358" y2="96.7553" gradientUnits="userSpaceOnUse"><stop stop-color="#2BFF00"/><stop offset="1" stop-color="#FF1A1A"/></linearGradient></defs>
+                </svg>
+              </div>
+              <div class="seg-wrap" id="seg2" style="width:31.443px;height:55.554px;left:84.78px;top:calc(50% - 21.22px);transform:translateY(-50%);">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="56" viewBox="0 0 32 56" fill="none" class="seg-svg">
+                  <path class="seg-path" d="M1.14551 2.06738C10.8098 0.643372 20.6325 0.643464 30.2969 2.06738L21.9629 54.4219C17.8209 53.8602 13.6215 53.8601 9.47949 54.4219L1.14551 2.06738Z" fill="url(#g2)" stroke="#202931" stroke-width="2.5"/>
+                  <defs><linearGradient id="g2" x1="114.222" y1="98" x2="-82.7783" y2="98" gradientUnits="userSpaceOnUse"><stop stop-color="#2BFF00"/><stop offset="1" stop-color="#FF1A1A"/></linearGradient></defs>
+                </svg>
+              </div>
+              <div class="seg-wrap" id="seg3" style="width:63.989px;height:66.949px;left:107.57px;top:calc(50% - 14.29px);transform:translateY(-50%);">
+                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="67" viewBox="0 0 64 67" fill="none" class="seg-svg">
+                  <path class="seg-path" d="M9.47656 1.14746C29.5214 4.51181 48.0496 13.9057 62.5674 28.0615L24.8955 65.5469C18.338 59.2976 10.0766 55.1079 1.14258 53.502L9.47656 1.14746Z" fill="url(#g3)" stroke="#202931" stroke-width="2.5"/>
+                  <defs><linearGradient id="g3" x1="91.4253" y1="96.7689" x2="-105.575" y2="96.7688" gradientUnits="userSpaceOnUse"><stop stop-color="#2BFF00"/><stop offset="1" stop-color="#FF1A1A"/></linearGradient></defs>
+                </svg>
+              </div>
+              <div class="seg-wrap" id="seg4" style="width:68.521px;height:70.711px;left:132.48px;top:calc(50% + 15.64px);transform:translateY(-50%);">
+                <svg xmlns="http://www.w3.org/2000/svg" width="69" height="71" viewBox="0 0 69 71" fill="none" class="seg-svg">
+                  <path class="seg-path" d="M1.8887 38.8994C9.8854 47.2108 14.4618 58.2055 14.7129 69.7109H67.9932C67.734 44.1482 57.5461 19.6733 39.5605 1.41504L1.8887 38.8994Z" fill="url(#g4)" stroke="#202931" stroke-width="2.5"/>
+                  <defs><linearGradient id="g4" x1="-130" y1="68.7107" x2="67" y2="68.7107" gradientUnits="userSpaceOnUse"><stop stop-color="#FF1A1A"/><stop offset="1" stop-color="#2BFF00"/></linearGradient></defs>
+                </svg>
+              </div>
+              <div class="zone-lbl zone-efear">Extreme<br>Fear</div>
+              <div class="zone-lbl zone-fear">Fear</div>
+              <div class="zone-lbl zone-greed">Greed</div>
+              <div class="zone-lbl zone-egreed">Extreme<br>Greed</div>
+              <div id="needle-wrap">
+                <svg xmlns="http://www.w3.org/2000/svg" width="41" height="64" viewBox="0 0 41 64" fill="none">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M40.1962 2L6.9282 63.6218L0 59.6218L36.7321 3.21865e-06L40.1962 2Z" fill="white"/>
+                </svg>
+              </div>
+              <div id="hub-wrap">
+                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="31" viewBox="0 0 64 31" fill="none">
+                  <g filter="url(#hub-filter)">
+                    <path d="M0 31C0.421863 13.8075 14.491 0 31.7851 0C49.0792 0 63.1484 13.8075 63.5702 31H0Z" fill="#202931"/>
+                  </g>
+                  <defs>
+                    <filter id="hub-filter" x="0" y="0" width="63.5702" height="31" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                      <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+                      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                      <feOffset/><feGaussianBlur stdDeviation="4"/>
+                      <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/>
+                      <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+                      <feBlend mode="normal" in2="shape" result="effect1_innerShadow_3066_7288"/>
+                    </filter>
+                  </defs>
+                </svg>
+                <span id="meter-val">64</span>
+              </div>
+            </div>
+          </div>
+          <div class="meter-carousel-nav">
+            <button class="meter-arrow" id="meter-prev"><svg width="9" height="10" viewBox="0 0 16 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0.802287 10.1317L12.5856 17.19C12.8376 17.3355 13.1234 17.4125 13.4144 17.4134C13.7054 17.4142 13.9916 17.3388 14.2444 17.1947C14.4972 17.0506 14.7079 16.8427 14.8555 16.5919C15.0031 16.3411 15.0824 16.056 15.0856 15.765L15.0856 1.64835C15.0824 1.35735 15.0031 1.07226 14.8555 0.821443C14.7079 0.570624 14.4972 0.362821 14.2444 0.218708C13.9916 0.0745951 13.7054 -0.000804896 13.4144 9.95191e-06C13.1234 0.0008248 12.8376 0.0778259 12.5856 0.223353L0.802287 7.28169C0.557375 7.43024 0.354886 7.63942 0.214356 7.88902C0.0738266 8.13863 0 8.42024 0 8.70669C0 8.99313 0.0738266 9.27474 0.214356 9.52435C0.354886 9.77395 0.557375 9.98313 0.802287 10.1317Z" fill="white" opacity="0.6"/></svg></button>
+            <div class="meter-progress" id="meter-progress">
+              <div class="meter-dot-pill" id="meter-pill"></div>
+              <div class="meter-dot-inactive"></div>
+              <div class="meter-dot-inactive"></div>
+              <div class="meter-dot-inactive"></div>
+            </div>
+            <button class="meter-arrow" id="meter-next"><svg width="9" height="10" viewBox="0 0 19 21" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.14 12.158L2.99998 20.628C2.69756 20.8027 2.35468 20.8951 2.00546 20.896C1.65624 20.897 1.31285 20.8065 1.00945 20.6336C0.706057 20.4607 0.45323 20.2113 0.276127 19.9103C0.0990238 19.6093 0.0038147 19.2672 -2.28882e-05 18.918L-2.28882e-05 1.97802C0.0038147 1.62882 0.0990238 1.28671 0.276127 0.985731C0.45323 0.68475 0.706057 0.435385 1.00945 0.262449C1.31285 0.0895138 1.65624 -0.000967026 2.00546 1.14441e-05C2.35468 0.000989914 2.69756 0.0933914 2.99998 0.268023L17.14 8.73802C17.4339 8.91629 17.6769 9.1673 17.8455 9.46683C18.0141 9.76635 18.1027 10.1043 18.1027 10.448C18.1027 10.7918 18.0141 11.1297 17.8455 11.4292C17.6769 11.7287 17.4339 11.9798 17.14 12.158Z" fill="white" opacity="0.6"/></svg></button>
+          </div>
+        </div>
+
+        <!-- Top Movers -->
+        <div class="movers-card" id="movers-card">
+          <!-- Tab column (matches commodity card style) -->
+          <div class="movers-tabs" id="movers-tabs">
+            <button class="movers-tab active" data-cat="risers" title="Top Risers">
+              <img src="svg/Top Risers.svg"  data-active="svg/Top Risers.svg"  data-inactive="svg/Top Risers.svg"  alt="Top Risers" />
+            </button>
+            <button class="movers-tab" data-cat="fallers" title="Top Fallers">
+              <img src="svg/Top Fallers.svg" data-active="svg/Top Fallers.svg" data-inactive="svg/Top Fallers.svg" alt="Top Fallers" />
+            </button>
+            <button class="movers-tab" data-cat="ipos" title="New IPOs">
+              <img src="svg/New IPOs.svg"    data-active="svg/New IPOs.svg"    data-inactive="svg/New IPOs.svg"    alt="New IPOs" />
+            </button>
+          </div>
+          <!-- Content body — mirrors commodity-body exactly -->
+          <div class="movers-body">
+            <div class="movers-header">
+              <span class="movers-name" id="movers-name">LMND</span>
+              <div class="movers-price-col">
+                <span class="movers-price color-up" id="movers-price">65.00</span>
+                <div class="movers-delta color-up" id="movers-delta">
+                  <img src="svg/triangle-up.svg" class="tri-svg-up" alt="up" />
+                  <span id="movers-delta-text">$23.00 (54.76%)</span>
+                </div>
+              </div>
+            </div>
+            <div class="movers-chart" id="movers-chart-wrap">
+              <canvas id="movers-canvas" ></canvas>
+            </div>
+            <div class="carousel-nav" id="movers-carousel-nav">
+              <button class="carousel-arrow" id="movers-prev" aria-label="Previous"><svg width="9" height="10" viewBox="0 0 16 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0.802287 10.1317L12.5856 17.19C12.8376 17.3355 13.1234 17.4125 13.4144 17.4134C13.7054 17.4142 13.9916 17.3388 14.2444 17.1947C14.4972 17.0506 14.7079 16.8427 14.8555 16.5919C15.0031 16.3411 15.0824 16.056 15.0856 15.765L15.0856 1.64835C15.0824 1.35735 15.0031 1.07226 14.8555 0.821443C14.7079 0.570624 14.4972 0.362821 14.2444 0.218708C13.9916 0.0745951 13.7054 -0.000804896 13.4144 9.95191e-06C13.1234 0.0008248 12.8376 0.0778259 12.5856 0.223353L0.802287 7.28169C0.557375 7.43024 0.354886 7.63942 0.214356 7.88902C0.0738266 8.13863 0 8.42024 0 8.70669C0 8.99313 0.0738266 9.27474 0.214356 9.52435C0.354886 9.77395 0.557375 9.98313 0.802287 10.1317Z" fill="white" opacity="0.6"/></svg></button>
+              <div class="carousel-progress" id="movers-progress">
+                <div class="carousel-dot-pill" id="movers-pill"></div>
+                <div class="carousel-dot-inactive"></div>
+                <div class="carousel-dot-inactive"></div>
+                <div class="carousel-dot-inactive"></div>
+              </div>
+              <button class="carousel-arrow" id="movers-next" aria-label="Next"><svg width="9" height="10" viewBox="0 0 19 21" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.14 12.158L2.99998 20.628C2.69756 20.8027 2.35468 20.8951 2.00546 20.896C1.65624 20.897 1.31285 20.8065 1.00945 20.6336C0.706057 20.4607 0.45323 20.2113 0.276127 19.9103C0.0990238 19.6093 0.0038147 19.2672 -2.28882e-05 18.918L-2.28882e-05 1.97802C0.0038147 1.62882 0.0990238 1.28671 0.276127 0.985731C0.45323 0.68475 0.706057 0.435385 1.00945 0.262449C1.31285 0.0895138 1.65624 -0.000967026 2.00546 1.14441e-05C2.35468 0.000989914 2.69756 0.0933914 2.99998 0.268023L17.14 8.73802C17.4339 8.91629 17.6769 9.1673 17.8455 9.46683C18.0141 9.76635 18.1027 10.1043 18.1027 10.448C18.1027 10.7918 18.0141 11.1297 17.8455 11.4292C17.6769 11.7287 17.4339 11.9798 17.14 12.158Z" fill="white" opacity="0.6"/></svg></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ad -->
+        <div class="ad-card ad-card-inner">
+          <span class="ad-placeholder-label">Advertisement</span>
+          <span class="ad-placeholder-text">Your ad here</span>
+        </div>
+
+      </div>
+
+      <!-- BOTTOM ROW -->
+      <div class="bottom-row">
+
+        <!-- FIXED WRAPPER: portfolio + shortlist always same total width, news never moves -->
+        <!-- Total: 518 dark body + 50 btn + 32 gap + 283 shortlist = 883px -->
+        <div class="port-sl-wrapper" id="port-sl-wrapper">
+
+          <!-- Dark portfolio body -->
+          <div class="portfolio-card" id="portfolio-card">
+            <div class="portfolio-body" id="portfolio-body">
+              <div class="portfolio-header">
+                <span class="portfolio-value" id="port-value">$87,665.31</span>
+                <div class="portfolio-delta color-up" id="port-delta">
+                  <span id="port-delta-text">+$2,006.52 (2.34%)</span>
+                </div>
+              </div>
+              <div class="portfolio-chart-area">
+                <div class="portfolio-chart" id="portfolio-chart-wrap">
+                  <canvas id="portfolio-canvas" ></canvas>
+                </div>
+                <div class="time-tabs" id="portfolio-time-tabs">
+                  <span class="time-tab active" data-range="1D">1D</span>
+                  <span class="time-tab" data-range="1W">1W</span>
+                  <span class="time-tab" data-range="1M">1M</span>
+                  <span class="time-tab" data-range="YTD">YTD</span>
+                  <span class="time-tab" data-range="1Y">1Y</span>
+                  <span class="time-tab" data-range="ALL">ALL</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- BLUE PANEL — IS the button when collapsed (50px), expands to 365px when open -->
+          <div class="blue-panel" id="stocks-panel">
+            <!-- The open/close toggle button — always left-edge of blue panel -->
+            <button class="port-open-btn" id="portfolio-btn">
+              <img src="svg/Open-Icon.svg" id="portfolio-btn-icon" alt="toggle"  />
+            </button>
+            <!-- Close icon — absolute top-right of the blue panel, fades in with content -->
+            <button class="stocks-close-btn" id="stocks-panel-close">
+              <img src="svg/Close-Icon.svg" alt="close"  />
+            </button>
+            <!-- Stocks content — fades in when panel expands -->
+            <div class="stocks-content" id="stocks-content">
+              <div class="stocks-panel-header">
+                <span class="stocks-panel-title">Stocks</span>
+              </div>
+              <div class="stocks-panel-list" id="stocks-panel-list"></div>
+              <div class="stocks-panel-footer" style="cursor:pointer;" onclick="window.location.href='portfolio.html'">See all</div>
+            </div>
+          </div>
+
+          <!-- SHORTLIST — absolutely positioned behind the expanding panel, always holds space -->
+          <div class="shortlist-card" id="shortlist-card">
+            <div class="sl-header">
+              <span class="sl-title">Shortlist</span>
+              <div class="sl-period-tabs" id="sl-period-tabs">
+                <span class="sl-period active" data-period="1D">1D</span>
+                <span class="sl-period" data-period="1W">1W</span>
+                <span class="sl-period" data-period="1M">1M</span>
+                <span class="sl-period" data-period="1Y">1Y</span>
+                <span class="sl-period" data-period="ALL">ALL</span>
+              </div>
+            </div>
+            <div class="sl-filters" id="sl-filters">
+              <button class="sl-filter active" data-filter="all">All</button>
+              <button class="sl-filter" data-filter="stock">Stocks</button>
+              <button class="sl-filter" data-filter="etf">ETFs</button>
+            </div>
+            <div class="sl-col-labels">
+              <span>Ticker</span>
+              <span>Chart</span>
+              <span class="sl-sort-label">1D <span class="sl-sort-arrow">▲</span></span>
+            </div>
+            <div class="sl-rows" id="sl-rows"></div>
+          </div>
+
+        </div><!-- /port-sl-wrapper -->
+
+        <!-- NEWS -->
+        <div class="news-card">
+          <div class="news-header">
+            <span class="news-title">News</span>
+            <div class="news-search-bar">
+              <img src="svg/Search Active.svg" class="news-bar-icon" alt="Search" />
+              <input class="news-bar-input" id="news-search-input" type="text" placeholder="Search markets, stocks, economy…" autocomplete="off" />
+              <button class="news-bar-clear" id="news-bar-clear" title="Clear">✕</button>
+            </div>
+          </div>
+          <div class="news-body" id="news-body">
+            <div class="news-status news-loading">
+              <div class="news-spinner"></div>
+              <span>Loading articles…</span>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /bottom-row -->
+    </div><!-- /main-content -->
+  </div><!-- /right-pane -->
+</div><!-- /layout -->
+<script>
+// ── KEYN global: time-proportional chart helpers ─────────────────────────────
+window.KEYN_CHART = (function() {
+  const PRE_START=240, MKT_START=570, MKT_END=960, AH_END=1200;
+  function frac(m){
+    if(m<=PRE_START)return 0;
+    if(m<=MKT_START)return .10*(m-PRE_START)/330;
+    if(m<=MKT_END)  return .10+.80*(m-MKT_START)/390;
+    if(m<=AH_END)   return .90+.10*(m-MKT_END)/240;
+    return 1;
+  }
+  function parseTime(str){
+    if(!str)return null;
+    const am=str.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if(am){let h=parseInt(am[1]),m=parseInt(am[2]);if(am[3].toUpperCase()==='PM'&&h!==12)h+=12;if(am[3].toUpperCase()==='AM'&&h===12)h=0;return h*60+m;}
+    const hm=str.match(/^(\d+):(\d+)$/);
+    if(hm)return parseInt(hm[1])*60+parseInt(hm[2]);
+    return null;
+  }
+  function makeXOf(times,n,W,PL,PR){
+    if(times&&times.length>=n){
+      const mins=times.slice(0,n).map(parseTime);
+      if(mins.every(m=>m!==null))return i=>PL+frac(mins[i])*(W-PL-PR);
+    }
+    return i=>PL+(n>1?(i/(n-1)):0)*(W-PL-PR);
+  }
+  function nearestIndex(xPx,W,PL,PR,times,n){
+    const hf=Math.max(0,Math.min(1,(xPx-PL)/(W-PL-PR)));
+    if(times&&times.length>=n){
+      const mins=times.slice(0,n).map(parseTime);
+      if(mins.every(m=>m!==null)){
+        let best=0,bestD=Infinity;
+        mins.forEach((m,i)=>{const d=Math.abs(frac(m)-hf);if(d<bestD){bestD=d;best=i;}});
+        return best;
+      }
+    }
+    return Math.round(Math.max(0,Math.min(n-1,hf*(n-1))));
+  }
+  return{frac,parseTime,makeXOf,nearestIndex};
+})();
+
+// ── KEYN global: drum digit animation ────────────────────────────────────────
+window.KEYN_DRUM=(function(){
+  const SPD='0.28s',EASE='cubic-bezier(0.72,0.01,0.30,1)';
+  function mkCol(ch){
+    const col=document.createElement('span');
+    col.style.cssText='display:inline-flex;flex-direction:column;height:1em;will-change:transform;';
+    '9876543210'.split('').forEach(d=>{const c=document.createElement('span');c.style.cssText='display:block;height:1em;line-height:1em;text-align:center;';c.textContent=d;col.appendChild(c);});
+    setPos(col,parseInt(ch,10),true);return col;
+  }
+  function mkStat(ch){const s=document.createElement('span');s.style.cssText='display:inline-block;line-height:1em;';s.textContent=ch;return s;}
+  function setPos(col,digit,instant){
+    const y=-(9-digit);
+    if(instant){const t=col.style.transition;col.style.transition='none';col.style.transform=`translateY(${y}em)`;col.offsetHeight;col.style.transition=t;}
+    else{col.style.transition=`transform ${SPD} ${EASE}`;col.style.transform=`translateY(${y}em)`;}
+  }
+  function build(el,str){
+    el.innerHTML='';el.style.display='inline-flex';el.style.overflow='hidden';
+    el.style.verticalAlign='bottom';el.style.lineHeight='1em';
+    el._drum=[];
+    str.split('').forEach(ch=>{
+      const isD=/\d/.test(ch);
+      if(isD){const col=mkCol(ch);el.appendChild(col);el._drum.push({ch,el:col,isD:true});}
+      else   {const s=mkStat(ch);  el.appendChild(s);  el._drum.push({ch,el:s,  isD:false});}
+    });
+    el.dataset.dv=str;
+  }
+  function tick(el,str){
+    if(el.dataset.dv===str)return;
+    if(!el._drum){build(el,str);return;}
+    const chars=str.split('');
+    const ok=chars.length===el._drum.length&&chars.every((c,i)=>/\d/.test(c)===el._drum[i].isD);
+    if(!ok){build(el,str);return;}
+    chars.forEach((ch,i)=>{const e=el._drum[i];if(e.ch===ch)return;e.ch=ch;if(e.isD)setPos(e.el,parseInt(ch,10),false);else e.el.textContent=ch;});
+    el.dataset.dv=str;
+  }
+  return{tick};
+})();
+</script>
+<script>
+  // ── Commodity card — tabs = category, carousel = items within category ──────
+  (function() {
+
+    // 30-min intervals: 9:30 → 16:00 = 14 points (fallback/placeholder)
+    const TIMES = ['9:30','10:00','10:30','11:00','11:30','12:00','12:30',
+                   '13:00','13:30','14:00','14:30','15:00','15:30','16:00'];
+
+    // symbol = Yahoo Finance ticker. prices/dir = fallback until live data loads.
+    const CATEGORIES = {
+      metals: [
+        { name:'Gold',     symbol:'GC=F',  prices:[4970,4985,5010,5030,5005,5020,5045,5060,5040,5055,5070,5048,5062,5062], dir:'up' },
+        { name:'Silver',   symbol:'SI=F',  prices:[31.50,31.62,31.80,31.90,31.70,31.85,31.95,32.00,31.88,31.92,32.05,32.10,32.14,32.14], dir:'up' },
+        { name:'Platinum', symbol:'PL=F',  prices:[995,990,988,985,982,980,984,986,983,981,979,980,982,982], dir:'dn' },
+        { name:'Copper',   symbol:'HG=F',  prices:[4.15,4.17,4.20,4.22,4.19,4.21,4.23,4.24,4.22,4.21,4.23,4.22,4.23,4.23], dir:'up' },
+      ],
+      energy: [
+        { name:'Crude Oil',   symbol:'CL=F',  prices:[69.80,69.50,69.20,69.00,68.80,68.60,68.75,68.60,68.45,68.55,68.42,68.50,68.42,68.42], dir:'dn' },
+        { name:'Natural Gas', symbol:'NG=F',  prices:[2.12,2.13,2.15,2.14,2.16,2.15,2.17,2.16,2.18,2.17,2.19,2.18,2.18,2.18], dir:'up' },
+        { name:'Gasoline',    symbol:'RB=F',  prices:[2.46,2.45,2.44,2.43,2.42,2.44,2.43,2.42,2.41,2.42,2.41,2.42,2.41,2.41], dir:'dn' },
+        { name:'Heating Oil', symbol:'HO=F',  prices:[2.33,2.34,2.35,2.34,2.35,2.36,2.35,2.34,2.35,2.35,2.35,2.35,2.35,2.35], dir:'up' },
+      ],
+      agri: [
+        { name:'Wheat',    symbol:'ZW=F',  prices:[534,536,538,540,539,541,543,542,540,541,542,540,541,541], dir:'up' },
+        { name:'Corn',     symbol:'ZC=F',  prices:[466,465,464,463,464,463,462,463,462,463,462,463,462,462], dir:'dn' },
+        { name:'Soybeans', symbol:'ZS=F',  prices:[1018,1022,1025,1028,1025,1027,1030,1032,1029,1031,1032,1030,1032,1032], dir:'up' },
+        { name:'Sugar',    symbol:'SB=F',  prices:[20.50,20.45,20.40,20.35,20.30,20.25,20.22,20.20,20.18,20.16,20.15,20.14,20.14,20.14], dir:'dn' },
+      ],
+      crypto: [
+        { name:'Bitcoin',  symbol:'BTC-USD', prices:[82800,83100,83500,83900,84100,83800,84000,84200,84100,84300,84210,84180,84210,84210], dir:'up' },
+        { name:'Ethereum', symbol:'ETH-USD', prices:[2090,2080,2070,2065,2060,2055,2050,2048,2045,2043,2041,2042,2041,2041], dir:'dn' },
+        { name:'Solana',   symbol:'SOL-USD', prices:[123,124,125,126,125,126,127,128,127,128,128,128,128,128], dir:'up' },
+        { name:'XRP',      symbol:'XRP-USD', prices:[0.498,0.500,0.502,0.505,0.504,0.506,0.508,0.510,0.509,0.511,0.512,0.511,0.512,0.512], dir:'up' },
+      ],
+    };
+
+    Object.values(CATEGORIES).flat().forEach(item => { item.loading = true; });
+    const liveCache = {};
+
+    // Fetch all symbols in a category in parallel and cache results
+    async function prefetchCategory(cat) {
+      const items = CATEGORIES[cat];
+      await Promise.allSettled(items.map(async item => {
+        if (liveCache[item.symbol]) return; // already cached
+        try {
+          const live = await window.KeynYahoo.fetchYahooChart(item.symbol, '5m', '1d');
+          if (live && live.prices.length > 1) {
+            liveCache[item.symbol] = live;
+            // Patch item in place so render picks up live data immediately
+            item.prices = live.prices;
+            item.times  = live.times;
+            item.open   = live.open;
+            item.dir    = live.currentPrice >= live.open ? 'up' : 'dn';
+            item.loading = false;
+          }
+        } catch (e) {
+          // Silently fall back to static data for this item
+          console.warn(`[KEYN] Live data failed for ${item.symbol}:`, e.message);
+        }
+      }));
+    }
+
+    // Format price nicely
+    function fmtPrice(val) {
+      if (val >= 1000) return val.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+      if (val < 10)    return val.toFixed(3);
+      return val.toFixed(2);
+    }
+
+    // Format delta
+    function fmtDelta(cur, open) {
+      const abs = cur - open;
+      const pct = (abs / open) * 100;
+      const sign = abs >= 0 ? '+' : '';
+      return `${sign}$${Math.abs(abs).toFixed(2)} (${Math.abs(pct).toFixed(2)}%)`;
+    }
+
+    const PILL_POS     = [0, 10, 20, 30];
+    const INACTIVE_POS = [[22,32,42],[0,32,42],[0,10,42],[0,10,20]];
+    const TRI_UP = '<img src="svg/triangle-up.svg" class="tri-svg-up" alt="up" />';
+    const TRI_DN = '<img src="svg/triangle-down.svg" class="tri-svg-dn" alt="down" />';
+
+    let activeCategory  = 'metals';
+    let activeItemIndex = 0;
+    let activeItem      = null;   // current item data
+    let hoverIndex      = null;   // currently hovered point index
+
+    // ── Canvas drawing ──────────────────────────────────────────────────────
+    function drawChart(canvas, prices, isUp, openPrice, isLoading) {
+      const wrap  = canvas.parentElement;
+      const W     = wrap.clientWidth;
+      const H     = wrap.clientHeight;
+      if (!W || !H) return;
+
+      canvas.width  = W * devicePixelRatio;
+      canvas.height = H * devicePixelRatio;
+      canvas.style.width  = W + 'px';
+      canvas.style.height = H + 'px';
+
+      const ctx   = canvas.getContext('2d');
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+
+      const n     = prices.length;
+      // Include open in range so reference line always fits
+      const allVals = openPrice != null ? [...prices, openPrice] : prices;
+      const min   = Math.min(...allVals) * 0.997;
+      const max   = Math.max(...allVals) * 1.003;
+      const PAD_L = 4, PAD_R = 4, PAD_T = 6, PAD_B = 2;
+
+      const xOf = window.KEYN_CHART.makeXOf(activeItem ? activeItem.times : null, n, W, PAD_L, PAD_R);
+      function yOf(v) { return PAD_T + (1 - (v - min) / (max - min)) * (H - PAD_T - PAD_B); }
+
+      const lineColor = isLoading ? '#6b7a8d' : (isUp ? '#2bff00' : '#ff1a1a');
+
+      // ── Reference line at open/prev-close ──
+      if (openPrice != null) {
+        const ry = yOf(openPrice);
+        ctx.beginPath();
+        ctx.setLineDash([3, 4]);
+        ctx.moveTo(PAD_L, ry);
+        ctx.lineTo(W - PAD_R, ry);
+        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // ── Area fill ──
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0,   isLoading?'rgba(107,122,141,0.30)':(isUp?'rgba(43,255,0,0.45)':'rgba(255,26,26,0.45)'));
+      grad.addColorStop(0.6, isLoading?'rgba(107,122,141,0.08)':(isUp?'rgba(43,255,0,0.12)':'rgba(255,26,26,0.12)'));
+      grad.addColorStop(1,   'rgba(0,0,0,0)');
+
+      ctx.beginPath();
+      ctx.moveTo(xOf(0), yOf(prices[0]));
+      for (let i = 1; i < n; i++) {
+        const xm = (xOf(i-1) + xOf(i)) / 2;
+        ctx.bezierCurveTo(xm, yOf(prices[i-1]), xm, yOf(prices[i]), xOf(i), yOf(prices[i]));
+      }
+      ctx.lineTo(xOf(n-1), H);
+      ctx.lineTo(xOf(0),   H);
+      ctx.closePath();
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // ── Line ──
+      ctx.beginPath();
+      ctx.moveTo(xOf(0), yOf(prices[0]));
+      for (let i = 1; i < n; i++) {
+        const xm = (xOf(i-1) + xOf(i)) / 2;
+        ctx.bezierCurveTo(xm, yOf(prices[i-1]), xm, yOf(prices[i]), xOf(i), yOf(prices[i]));
+      }
+      ctx.strokeStyle = lineColor;
+      ctx.lineWidth   = 1.5;
+      ctx.stroke();
+
+      // ── Left gap-fill: solid line at first price if data doesn't start at edge ──
+      const _x0 = xOf(0), _y0 = yOf(prices[0]);
+      if (_x0 > PAD_L + 3) {
+        ctx.beginPath();
+        ctx.moveTo(PAD_L, _y0); ctx.lineTo(_x0, _y0);
+        ctx.strokeStyle = lineColor; ctx.lineWidth = 1.5; ctx.stroke();
+      }
+
+      // ── Hover crosshair ──
+      if (hoverIndex !== null) {
+        const hx = xOf(hoverIndex);
+        const hy = yOf(prices[hoverIndex]);
+
+        // Vertical dashed line
+        ctx.beginPath();
+        ctx.setLineDash([3, 3]);
+        ctx.moveTo(hx, PAD_T);
+        ctx.lineTo(hx, H - PAD_B);
+        ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+        ctx.lineWidth   = 1;
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.beginPath(); ctx.arc(hx, hy, 3.5, 0, Math.PI*2);
+        ctx.fillStyle = lineColor; ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 1.2; ctx.stroke();
+
+        const timeLabel = (activeItem && activeItem.times && activeItem.times[hoverIndex]) || TIMES[hoverIndex] || '';
+        if (timeLabel) {
+          ctx.font = '10px Zain, sans-serif';
+          const _lw = ctx.measureText(timeLabel).width + 10;
+          const _lh = 16;
+          let _lx = hx + 3; if (_lx + _lw > W - PAD_R) _lx = hx - _lw - 3;
+          const _ly = H - PAD_B - _lh - 1;
+          ctx.fillStyle = 'rgba(15,20,30,0.88)'; ctx.beginPath(); ctx.roundRect(_lx,_ly,_lw,_lh,3); ctx.fill();
+          ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.textAlign = 'left'; ctx.fillText(timeLabel, _lx+5, _ly+11);
+        }
+      }
+    }
+
+    // ── Header update ───────────────────────────────────────────────────────
+    function updateHeader(item, priceVal) {
+      const nameEl  = window._commEls.nameEl;
+      const priceEl = window._commEls.priceEl;
+      const deltaEl = window._commEls.deltaEl;
+      const dayOpen = item.open ?? item.prices[0];
+      const isUp  = priceVal >= dayOpen;
+      const dir   = isUp ? 'up' : 'dn';
+      nameEl.textContent  = item.name;
+      priceEl.className   = 'commodity-price color-' + dir;
+      window.KEYN_DRUM.tick(priceEl, fmtPrice(priceVal));
+      deltaEl.className   = 'commodity-delta color-' + dir;
+      deltaEl.innerHTML   = (isUp ? TRI_UP : TRI_DN) + '<span>' + fmtDelta(priceVal, dayOpen) + '</span>';
+    }
+
+    // ── Canvas hover events ─────────────────────────────────────────────────
+    function bindHover(canvas, item) {
+      function getIndex(e) {
+        const rect = canvas.getBoundingClientRect();
+        const x    = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+        const n    = item.prices.length;
+        const PAD_L = 4, PAD_R = 4;
+        const W    = rect.width;
+        return window.KEYN_CHART.nearestIndex(x, W, PAD_L, PAD_R, item.times, n);
+      }
+
+      canvas.onmousemove = function(e) {
+        hoverIndex = getIndex(e);
+        updateHeader(item, item.prices[hoverIndex]);
+        drawChart(canvas, item.prices, item.dir === 'up', item.open ?? item.prices[0], item.loading);
+      };
+      canvas.onmouseleave = function() {
+        hoverIndex = null;
+        updateHeader(item, item.prices[item.prices.length - 1]);
+        drawChart(canvas, item.prices, item.dir === 'up', item.open ?? item.prices[0], item.loading);
+      };
+    }
+
+    // ── Render item ─────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', function() {
+      const tabs         = document.querySelectorAll('#commodity-tabs .commodity-tab');
+      const nameEl_      = document.getElementById('commodity-name');
+      const priceEl_     = document.getElementById('commodity-price');
+      const deltaEl_     = document.getElementById('commodity-delta');
+      const canvas       = document.getElementById('commodity-canvas');
+      const pill         = document.getElementById('commodity-pill');
+      const inactiveDots = document.querySelectorAll('#commodity-progress .carousel-dot-inactive');
+      const prevBtn      = document.getElementById('commodity-prev');
+      const nextBtn      = document.getElementById('commodity-next');
+
+      // expose to closure
+      window._commEls = { nameEl: nameEl_, priceEl: priceEl_, deltaEl: deltaEl_ };
+
+      function renderItem(index) {
+        activeItemIndex = index;
+        const item = CATEGORIES[activeCategory][index];
+        activeItem = item;
+        hoverIndex = null;
+
+        const { nameEl, priceEl, deltaEl } = window._commEls;
+        nameEl.textContent  = item.name;
+        const cur    = item.prices[item.prices.length - 1];
+        const dayOpen = item.open ?? item.prices[0];
+        const isUp   = cur >= dayOpen;
+        priceEl.className   = 'commodity-price color-' + (isUp ? 'up' : 'dn');
+        window.KEYN_DRUM.tick(priceEl, fmtPrice(cur));
+        deltaEl.className   = 'commodity-delta color-'  + (isUp ? 'up' : 'dn');
+        deltaEl.innerHTML   = (isUp ? TRI_UP : TRI_DN) + '<span>' + fmtDelta(cur, dayOpen) + '</span>';
+
+        // Dots
+        pill.style.left = PILL_POS[index] + 'px';
+        inactiveDots.forEach((dot, i) => { dot.style.left = INACTIVE_POS[index][i] + 'px'; });
+
+        // Draw chart (wait one frame for layout to settle)
+        requestAnimationFrame(() => {
+          drawChart(canvas, item.prices, isUp, item.open ?? item.prices[0], item.loading);
+          bindHover(canvas, item);
+        });
+      }
+
+      function switchCategory(cat) {
+        activeCategory = cat;
+        tabs.forEach(t => {
+          const match = t.dataset.tab === cat;
+          t.classList.toggle('active', match);
+          const img = t.querySelector('img');
+          img.src = match ? img.dataset.active : img.dataset.inactive;
+        });
+        renderItem(0);
+
+        // Prefetch live data for this category; re-render active item when done
+        prefetchCategory(cat).then(() => {
+          // Only re-render if user hasn't switched away
+          if (activeCategory === cat) renderItem(activeItemIndex);
+        });
+      }
+
+      // Expose nameEl/priceEl/deltaEl inside renderItem via closure fix
+      Object.assign(window._commEls, {
+        nameEl: nameEl_, priceEl: priceEl_, deltaEl: deltaEl_
+      });
+
+      tabs.forEach(tab => tab.addEventListener('click', () => switchCategory(tab.dataset.tab)));
+      prevBtn.addEventListener('click', () => {
+        const len = CATEGORIES[activeCategory].length;
+        renderItem((activeItemIndex - 1 + len) % len);
+      });
+      nextBtn.addEventListener('click', () => {
+        const len = CATEGORIES[activeCategory].length;
+        renderItem((activeItemIndex + 1) % len);
+      });
+
+      // Redraw on resize
+      window.addEventListener('resize', () => {
+        if (activeItem) drawChart(canvas, activeItem.prices, activeItem.dir === 'up', activeItem.open ?? activeItem.prices[0], activeItem.loading);
+      });
+
+      switchCategory('metals');
+    });
+  })();
+
+
+
+  // ── Region picker + live ticker bar ────────────────────────────────────────
+  (function() {
+    const track      = document.getElementById('ticker-track');
+    const activeFlag = document.getElementById('active-flag');
+    const picker     = document.getElementById('region-picker');
+    const flagWrap   = document.getElementById('flag-wrap');
+
+    let allRegions   = {};
+    let activeKey    = 'us';
+    let tickerAnim   = null;
+
+    // ── Format helpers ──────────────────────────────────────────────────────
+    function fmtPrice(v, currency) {
+      if (v == null) return '—';
+      if (Math.abs(v) >= 10000) return v.toLocaleString('en-US', {maximumFractionDigits: 0});
+      if (Math.abs(v) >= 1000)  return v.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      if (Math.abs(v) < 10)     return v.toFixed(4);
+      return v.toFixed(2);
+    }
+
+    function fmtDelta(change, changePct) {
+      if (change == null) return '';
+      const sign = change >= 0 ? '+' : '';
+      return `${sign}${change.toFixed(2)}`;
+    }
+
+    function fmtPct(pct) {
+      if (pct == null) return '';
+      const sign = pct >= 0 ? '+' : '';
+      return `${sign}${pct.toFixed(2)}%`;
+    }
+
+    // ── Build ticker track from quote data ───────────────────────────────────
+    function buildTrack(tickers, quotes) {
+      const TRI_UP = '<img src="svg/triangle-up.svg" class="tri-svg-up" alt="up"/>';
+      const TRI_DN = '<img src="svg/triangle-down.svg" class="tri-svg-dn" alt="dn"/>';
+
+      function makeCard(t) {
+        const q       = quotes[t.symbol] || {};
+        const hasData = q.change != null && q.change !== 0;
+        const isUp    = (q.change || 0) >= 0;
+        const dir     = hasData ? (isUp ? 'up' : 'dn') : 'flat';
+        const tri     = hasData ? (isUp ? TRI_UP : TRI_DN) : '';
+        const pctStr  = hasData ? fmtPct(q.changePct) : (q.changePct != null ? fmtPct(q.changePct) : '');
+        return `
+          <div class="index-card">
+            <div class="index-top">
+              <span class="index-name">${t.name}</span>
+              <div class="index-top-right">
+                ${tri}<span class="index-pct ${dir}">${pctStr}</span>
+              </div>
+            </div>
+            <div class="index-bot">
+              <span class="index-delta color-${dir}">${fmtDelta(q.change)}</span>
+              <span class="index-price">${fmtPrice(q.price)}</span>
+            </div>
+          </div>
+          <div class="ticker-sep">|</div>`;
+      }
+
+      // Build set 1 + duplicate set 2 for seamless CSS scroll loop
+      const set = tickers.map(makeCard).join('');
+      track.innerHTML = set + set;
+
+      // Reset animation so it restarts cleanly
+      track.style.animation = 'none';
+      track.offsetHeight; // reflow
+      track.style.animation = '';
+    }
+
+    // ── Fetch quotes for a region and render ─────────────────────────────────
+    async function loadRegion(key) {
+      const region  = allRegions[key];
+      if (!region) return;
+      const symbols = region.tickers.map(t => t.symbol);
+
+      // Show placeholder dashes immediately
+      buildTrack(region.tickers, {});
+
+      try {
+        const quotes = await window.KeynYahoo.fetchYahooQuotes(symbols);
+        buildTrack(region.tickers, quotes);
+      } catch(e) {
+        console.warn('[KEYN ticker] quote fetch failed:', e.message);
+      }
+    }
+
+    // ── Build region picker buttons ──────────────────────────────────────────
+    function buildPicker(regions) {
+      picker.innerHTML = '';
+      const _sorted = Object.entries(regions).sort(([a],[b]) => a==='us'?-1:b==='us'?1:0);
+      _sorted.forEach(([key, region]) => {
+        if (key === 'edit') return; // skip edit button for now
+        const btn = document.createElement('button');
+        btn.className = 'picker-btn';
+        btn.title = region.label;
+        const img = document.createElement('img');
+        img.src = region.flag;
+        img.alt = region.label;
+        btn.appendChild(img);
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          activeKey = key;
+          activeFlag.src = region.flag;
+          activeFlag.alt = region.label;
+          closePicker();
+          loadRegion(key);
+        });
+        picker.appendChild(btn);
+      });
+    }
+
+    function openPicker()  { picker.style.display = 'flex'; }
+    function closePicker() { picker.style.display = 'none'; }
+
+    flagWrap.addEventListener('click', e => {
+      e.stopPropagation();
+      picker.style.display === 'flex' ? closePicker() : openPicker();
+    });
+    document.addEventListener('click', closePicker);
+
+    // ── Init ─────────────────────────────────────────────────────────────────
+    (async () => {
+      try {
+        const data = await window.KeynYahoo.fetchRegions();
+        allRegions = data.regions;
+        activeKey  = data.default || 'us';
+        buildPicker(allRegions);
+        const defaultRegion = allRegions[activeKey];
+        if (defaultRegion) {
+          activeFlag.src = defaultRegion.flag;
+          activeFlag.alt = defaultRegion.label;
+        }
+        loadRegion(activeKey);
+      } catch(e) {
+        console.warn('[KEYN ticker] failed to load regions:', e.message);
+      }
+    })();
+
+  })();
+
+  // ── Top Movers card — live data from Yahoo screener + Nasdaq IPO calendar ──
+  (function() {
+
+    const delay = ms => new Promise(r => setTimeout(r, ms));
+
+    // Placeholders shown instantly before live data arrives
+    const PLACEHOLDER = [
+      { name:'—', prices:[10,10,10,10,10,10,10,10,10,10,10,10,10,10], open:10, dir:'up' },
+      { name:'—', prices:[10,10,10,10,10,10,10,10,10,10,10,10,10,10], open:10, dir:'up' },
+      { name:'—', prices:[10,10,10,10,10,10,10,10,10,10,10,10,10,10], open:10, dir:'up' },
+      { name:'—', prices:[10,10,10,10,10,10,10,10,10,10,10,10,10,10], open:10, dir:'up' },
+    ];
+
+    PLACEHOLDER.forEach(p => { p.loading = true; });
+    const LIVE = { risers: [...PLACEHOLDER], fallers: [...PLACEHOLDER], ipos: [...PLACEHOLDER] };
+
+    const PILL_POS     = [0, 10, 20, 30];
+    const INACTIVE_POS = [[22,32,42],[0,32,42],[0,10,42],[0,10,20]];
+    const TRI_UP = '<img src="svg/triangle-up.svg" class="tri-svg-up" alt="up" />';
+    const TRI_DN = '<img src="svg/triangle-down.svg" class="tri-svg-dn" alt="down" />';
+
+    const nameEl    = document.getElementById('movers-name');
+    const priceEl   = document.getElementById('movers-price');
+    const deltaEl   = document.getElementById('movers-delta');
+    const canvas    = document.getElementById('movers-canvas');
+    const pill      = document.getElementById('movers-pill');
+    const inactDots = document.querySelectorAll('#movers-progress .carousel-dot-inactive');
+    const prevBtn   = document.getElementById('movers-prev');
+    const nextBtn   = document.getElementById('movers-next');
+    const tabs      = document.querySelectorAll('#movers-tabs .movers-tab');
+
+    let activeCat       = 'risers';
+    let activeItemIndex = 0;
+    let activeItem      = null;
+    let hoverIndex      = null;
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    function fmtPrice(val) {
+      if (!val && val !== 0) return '—';
+      if (val >= 1000) return val.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+      if (val < 10)    return val.toFixed(3);
+      return val.toFixed(2);
+    }
+
+    function fmtDelta(cur, open) {
+      const abs = cur - open, pct = (abs / open) * 100, sign = abs >= 0 ? '+' : '';
+      return `${sign}$${Math.abs(abs).toFixed(2)} (${sign}${Math.abs(pct).toFixed(2)}%)`;
+    }
+
+    // ── drawChart — includes reference line at open/prev-close ────────────────
+    function drawChart(prices, isUp, openPrice, isLoading) {
+      const wrap = canvas.parentElement;
+      const W = wrap.clientWidth, H = wrap.clientHeight;
+      if (!W || !H || prices.length < 2) return;
+      canvas.width  = W * devicePixelRatio;
+      canvas.height = H * devicePixelRatio;
+      canvas.style.width  = W + 'px';
+      canvas.style.height = H + 'px';
+      const ctx = canvas.getContext('2d');
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+      const n = prices.length;
+
+      // Include open in range so reference line is always visible
+      const allVals = openPrice != null ? [...prices, openPrice] : prices;
+      const min = Math.min(...allVals) * 0.997;
+      const max = Math.max(...allVals) * 1.003;
+      const PAD_L = 4, PAD_R = 4, PAD_T = 6, PAD_B = 14;
+
+      const xOf = window.KEYN_CHART.makeXOf(activeItem ? activeItem.times : null, n, W, PAD_L, PAD_R);
+      function yOf(v) { return PAD_T + (1 - (v - min) / (max - min)) * (H - PAD_T - PAD_B); }
+
+      const lineColor = isLoading ? '#6b7a8d' : (isUp ? '#2bff00' : '#ff1a1a');
+
+      // Reference line at open price
+      if (openPrice != null) {
+        const ry = yOf(openPrice);
+        ctx.beginPath();
+        ctx.setLineDash([3, 4]);
+        ctx.moveTo(PAD_L, ry);
+        ctx.lineTo(W - PAD_R, ry);
+        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // Area fill
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0,   isLoading?'rgba(107,122,141,0.30)':(isUp?'rgba(43,255,0,0.45)':'rgba(255,26,26,0.45)'));
+      grad.addColorStop(0.6, isLoading?'rgba(107,122,141,0.08)':(isUp?'rgba(43,255,0,0.12)':'rgba(255,26,26,0.12)'));
+      grad.addColorStop(1,   'rgba(0,0,0,0)');
+      ctx.beginPath();
+      ctx.moveTo(xOf(0), yOf(prices[0]));
+      for (let i = 1; i < n; i++) {
+        const xm = (xOf(i-1)+xOf(i))/2;
+        ctx.bezierCurveTo(xm, yOf(prices[i-1]), xm, yOf(prices[i]), xOf(i), yOf(prices[i]));
+      }
+      ctx.lineTo(xOf(n-1), H); ctx.lineTo(xOf(0), H); ctx.closePath();
+      ctx.fillStyle = grad; ctx.fill();
+
+      // Line
+      ctx.beginPath();
+      ctx.moveTo(xOf(0), yOf(prices[0]));
+      for (let i = 1; i < n; i++) {
+        const xm = (xOf(i-1)+xOf(i))/2;
+        ctx.bezierCurveTo(xm, yOf(prices[i-1]), xm, yOf(prices[i]), xOf(i), yOf(prices[i]));
+      }
+      ctx.strokeStyle = lineColor; ctx.lineWidth = 1.5; ctx.stroke();
+
+      // ── Left gap-fill: solid line at first price if data doesn't start at edge ──
+      const _x0 = xOf(0), _y0 = yOf(prices[0]);
+      if (_x0 > PAD_L + 3) {
+        ctx.beginPath();
+        ctx.moveTo(PAD_L, _y0); ctx.lineTo(_x0, _y0);
+        ctx.strokeStyle = lineColor; ctx.lineWidth = 1.5; ctx.stroke();
+      }
+
+      // Hover crosshair
+      if (hoverIndex !== null) {
+        const hx = xOf(hoverIndex), hy = yOf(prices[hoverIndex]);
+        ctx.beginPath(); ctx.setLineDash([3,3]);
+        ctx.moveTo(hx, PAD_T); ctx.lineTo(hx, H - PAD_B);
+        ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 1; ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.beginPath(); ctx.arc(hx, hy, 4, 0, Math.PI*2);
+        ctx.fillStyle = lineColor; ctx.fill();
+        ctx.strokeStyle = 'white'; ctx.lineWidth = 1.5; ctx.stroke();
+        const timeLabel = (activeItem?.times && activeItem.times[hoverIndex]) || '';
+        if (timeLabel) {
+          ctx.font = '10px Zain, sans-serif';
+          const _lw = ctx.measureText(timeLabel).width + 10;
+          const _lh = 16;
+          let _lx = hx + 3; if (_lx + _lw > W - PAD_R) _lx = hx - _lw - 3;
+          const _ly = H - PAD_B - _lh + 4;
+          ctx.fillStyle = 'rgba(15,20,30,0.88)'; ctx.beginPath(); ctx.roundRect(_lx,_ly,_lw,_lh,3); ctx.fill();
+          ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.textAlign = 'left'; ctx.fillText(timeLabel, _lx+5, _ly+11);
+        }
+      }
+    }
+
+    function updateHeader(item, priceVal) {
+      const dayOpen = item.open ?? item.prices[0];
+      const isUp = priceVal >= dayOpen;
+      const dir  = isUp ? 'up' : 'dn';
+      nameEl.textContent = item.name;
+      priceEl.className  = 'movers-price color-' + dir;
+      window.KEYN_DRUM.tick(priceEl, fmtPrice(priceVal));
+      deltaEl.className  = 'movers-delta color-' + dir;
+      deltaEl.innerHTML   = (isUp ? TRI_UP : TRI_DN) + '<span>' + fmtDelta(priceVal, dayOpen) + '</span>';
+    }
+
+    function bindHover(item) {
+      canvas.onmousemove = function(e) {
+        const rect = canvas.getBoundingClientRect();
+        const n = item.prices.length;
+        const PAD_L = 4, PAD_R = 4;
+        hoverIndex = window.KEYN_CHART.nearestIndex(e.clientX - rect.left, rect.width, PAD_L, PAD_R, item.times, n);
+        updateHeader(item, item.prices[hoverIndex]);
+        drawChart(item.prices, item.dir === 'up', item.open, item.loading);
+      };
+      canvas.onmouseleave = function() {
+        hoverIndex = null;
+        updateHeader(item, item.prices[item.prices.length-1]);
+        drawChart(item.prices, item.dir === 'up', item.open, item.loading);
+      };
+    }
+
+    function renderItem(index) {
+      activeItemIndex = index;
+      const item = LIVE[activeCat][index];
+      activeItem = item;
+      hoverIndex = null;
+      updateHeader(item, item.prices[item.prices.length - 1]);
+      pill.style.left = PILL_POS[index] + 'px';
+      inactDots.forEach((d, i) => { d.style.left = INACTIVE_POS[index][i] + 'px'; });
+      requestAnimationFrame(() => {
+        drawChart(item.prices, item.dir === 'up', item.open, item.loading);
+        bindHover(item);
+      });
+    }
+
+    function switchCategory(cat) {
+      activeCat = cat;
+      tabs.forEach(t => t.classList.toggle('active', t.dataset.cat === cat));
+      renderItem(0);
+    }
+
+    // ── Live data fetchers ────────────────────────────────────────────────────
+
+    async function fetchScreener(scrId) {
+      const IS_LOCAL = ['localhost','127.0.0.1'].includes(location.hostname);
+      const YH = 'https://query1.finance.yahoo.com';
+      const CP = 'https://corsproxy.io/?';
+      const path = `/v1/finance/screener/predefined/saved`;
+      // Fetch 10 so we have fallbacks if any charts are unavailable
+      const qs   = `scrIds=${scrId}&count=10&fields=symbol,shortName,regularMarketPrice,regularMarketChange,regularMarketChangePercent`;
+      const target = `${YH}${path}?${qs}`;
+      const url = IS_LOCAL
+        ? `${CP}${encodeURIComponent(target)}`
+        : `/api/yahoo?path=${encodeURIComponent(path)}&${qs}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Screener HTTP ${res.status}`);
+      const data = await res.json();
+      const quotes = data?.finance?.result?.[0]?.quotes || [];
+      return quotes.map(q => ({
+        symbol: q.symbol, name: q.shortName || q.symbol,
+        price: q.regularMarketPrice, change: q.regularMarketChange,
+        changePct: q.regularMarketChangePercent,
+      }));
+    }
+
+    async function fetchIPOs() {
+      // Fetch up to 3 months of PRICED IPOs to build a large candidate pool.
+      // Upcoming IPOs never have Yahoo chart data, so we skip them entirely.
+      const IS_LOCAL = ['localhost','127.0.0.1'].includes(location.hostname);
+      const CP = 'https://corsproxy.io/?';
+      const allRows = [];
+      const now = new Date();
+      for (let m = 0; m < 3; m++) {
+        try {
+          const d = new Date(now.getFullYear(), now.getMonth() - m, 1);
+          const monthStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+          const target = `https://api.nasdaq.com/api/ipo/calendar?date=${monthStr}`;
+          const url = IS_LOCAL
+            ? `${CP}${encodeURIComponent(target)}`
+            : `/api/ipos?month=${monthStr}`;
+          const res = await fetch(url);
+          if (!res.ok) continue;
+          const data = await res.json();
+          // Priced only — these are already trading and have Yahoo chart history
+          const priced = data?.data?.priced?.rows || [];
+          allRows.push(...priced);
+        } catch(e) { /* skip month on error */ }
+      }
+      return allRows
+        .map(r => ({ symbol: (r.proposedTickerSymbol || r.symbol || '').trim(), name: r.companyName || '', date: r.pricedDate || '' }))
+        .filter(r => r.symbol && r.symbol !== 'N/A' && r.symbol.length > 0 && /^[A-Z]/.test(r.symbol))
+        .sort((a,b) => new Date(b.date) - new Date(a.date));
+    }
+
+    // Checks whether a chart result has enough real data to be worth showing
+    function isValidChart(live) {
+      return live && live.prices.length >= 5;
+    }
+
+    async function loadCategoryLive(cat) {
+      try {
+        let candidates = []; // full list to walk through
+
+        if (cat === 'risers') {
+          const s = await fetchScreener('day_gainers');
+          candidates = s.map(q => ({ symbol: q.symbol, name: q.name, screener: q }));
+        } else if (cat === 'fallers') {
+          const s = await fetchScreener('day_losers');
+          candidates = s.map(q => ({ symbol: q.symbol, name: q.name, screener: q }));
+        } else {
+          const ipos = await fetchIPOs();
+          candidates = ipos.map(i => ({ symbol: i.symbol, name: i.name, screener: null }));
+        }
+
+        // Walk candidates until we have 4 valid chart slots filled
+        let slot = 0;
+        for (let i = 0; i < candidates.length && slot < 4; i++) {
+          if (i > 0) await delay(350);
+          const { symbol, screener } = candidates[i];
+          try {
+            const live = await window.KeynYahoo.fetchYahooChart(symbol, '5m', '1d');
+            if (!isValidChart(live)) {
+              console.warn(`[KEYN movers] ${symbol} skipped — only ${live?.prices?.length ?? 0} candles`);
+              continue; // try next candidate for this slot
+            }
+            const isUp = live.currentPrice >= live.open;
+            LIVE[cat][slot] = {
+              name:   symbol,
+              prices: live.prices,
+              times:  live.times,
+              open:   live.open,
+              dir:    isUp ? 'up' : 'dn',
+            };
+            if (activeCat === cat && activeItemIndex === slot) renderItem(slot);
+            slot++;
+          } catch(e) {
+            console.warn(`[KEYN movers] ${symbol} skipped — ${e.message}`);
+            // continue to next candidate
+          }
+        }
+      } catch(e) {
+        console.warn(`[KEYN movers] ${cat} load failed:`, e.message);
+      }
+    }
+
+    // ── Event wiring ──────────────────────────────────────────────────────────
+
+    tabs.forEach(tab => tab.addEventListener('click', () => {
+      const cat = tab.dataset.cat;
+      tabs.forEach(t => t.classList.toggle('active', t.dataset.cat === cat));
+      activeCat = cat;
+      renderItem(0);
+      loadCategoryLive(cat);
+    }));
+
+    prevBtn.addEventListener('click', () => {
+      const len = LIVE[activeCat].length;
+      renderItem((activeItemIndex - 1 + len) % len);
+    });
+    nextBtn.addEventListener('click', () => {
+      const len = LIVE[activeCat].length;
+      renderItem((activeItemIndex + 1) % len);
+    });
+    window.addEventListener('resize', () => {
+      if (activeItem) drawChart(activeItem.prices, activeItem.dir === 'up', activeItem.open);
+    });
+
+    // ── Init — show placeholders, load risers immediately ─────────────────────
+    switchCategory('risers');
+    loadCategoryLive('risers');
+    // Pre-fetch others in background after a beat
+    delay(2000).then(() => loadCategoryLive('fallers'));
+    delay(4000).then(() => loadCategoryLive('ipos'));
+
+  })();
+
+  (function() {
+    const METERS = [
+      { title:"F&G",  value:64,  min:0,   max:100, unit:"",  invert:false,
+        tooltip:"Fear & Greed Index (0-100). Composite of volatility, momentum, put/call ratio, safe-haven demand, and junk bond spreads. Below 25 = Extreme Fear (buy signal). Above 75 = Extreme Greed (caution)." },
+      { title:"VIX",  value:16,  min:0,   max:80,  unit:"",  invert:false,
+        tooltip:"CBOE Volatility Index — expected 30-day S&P 500 volatility. Below 12 = dangerous complacency. 20-30 = elevated. Above 40 = panic / historic buy opportunity." },
+      { title:"SKEW", value:120, min:100, max:170, unit:"",  invert:true,
+        tooltip:"CBOE Skew Index — measures tail risk / black swan probability. Scale is inverted: higher SKEW = more fear. 100 = no tail risk. 130+ = elevated. 150+ = institutions heavily hedging crash risk." },
+      { title:"BUFF", value:155, min:0,   max:250, unit:"%", invert:false,
+        tooltip:"Buffett Indicator: Wilshire 5000 market cap / US GDP. Below 75% = undervalued. 75-115% = fair value. Above 150% = historically extreme overvaluation." },
+    ];
+    const SEG_COLORS = ["#ff1a1a","#e67e22","#cccccc","#7ab800","#2bff00"];
+    const PILL_POS     = [0, 10, 20, 30];
+    const INACTIVE_POS = [[22,32,42],[0,32,42],[0,10,42],[0,10,20]];
+    const NEEDLE_LEFT = 98.32, NEEDLE_TOP = 20.88, PIVOT_X = 3.464, PIVOT_Y = 61.622;
+    const ANIM_DUR = 850;
+    const IS_LOCAL = ['localhost','127.0.0.1'].includes(location.hostname);
+    const YH_BASE  = 'https://query1.finance.yahoo.com';
+    const CP       = 'https://corsproxy.io/?';
+
+    function valToRot(value, min, max) {
+      const pct = Math.max(0, Math.min(1, (value - min) / (max - min)));
+      return (pct - 0.5) * 180 - 30;
+    }
+    function getSegIdx(value, min, max) {
+      const pct = Math.max(0, Math.min(0.9999, (value - min) / (max - min)));
+      return Math.floor(pct * 5);
+    }
+
+    const titleEl   = document.getElementById("meter-title");
+    const tooltipEl = document.getElementById("meter-tooltip");
+    const needleWrap= document.getElementById("needle-wrap");
+    const hubWrap   = document.getElementById("hub-wrap");
+    const valEl     = document.getElementById("meter-val");
+    const segEls    = [0,1,2,3,4].map(i => document.getElementById("seg"+i));
+    const pill      = document.getElementById("meter-pill");
+    const inactDots = document.querySelectorAll("#meter-progress .meter-dot-inactive");
+    const prevBtn   = document.getElementById("meter-prev");
+    const nextBtn   = document.getElementById("meter-next");
+    needleWrap.style.cssText = "position:absolute;left:"+NEEDLE_LEFT+"px;top:"+NEEDLE_TOP+"px;transform-origin:"+PIVOT_X+"px "+PIVOT_Y+"px;";
+    hubWrap.style.cssText = "position:absolute;left:69.5px;top:67px;";
+
+    let activeIndex=0, animHandle=null, animStart=null, animFrom=-30, animTo=-30;
+
+    function setNeedle(deg) { needleWrap.style.transform = "rotate("+deg+"deg)"; }
+    function animate(ts) {
+      if (!animStart) animStart = ts;
+      const t = Math.min(1, (ts - animStart) / ANIM_DUR);
+      const ease = 1 - Math.pow(1-t, 3);
+      setNeedle(animFrom + (animTo - animFrom) * ease);
+      if (t < 1) animHandle = requestAnimationFrame(animate);
+    }
+
+    function render(index) {
+      activeIndex = index;
+      const m = METERS[index];
+      // For inverted meters, flip the display value for needle + segment
+      const displayVal = m.invert ? m.min + m.max - m.value : m.value;
+      const segIdx = getSegIdx(displayVal, m.min, m.max);
+      titleEl.innerHTML = m.title;
+      tooltipEl.textContent = m.tooltip;
+      segEls.forEach((el, i) => el.classList.toggle("seg-inactive", i !== segIdx));
+      // Always show the real value
+      valEl.textContent = (m.unit === '%') ? Math.round(m.value) + m.unit
+        : (Number.isInteger(Math.round(m.value * 10) / 10) ? Math.round(m.value) : m.value.toFixed(1)) + m.unit;
+      valEl.style.color = SEG_COLORS[segIdx];
+      pill.style.left = PILL_POS[index] + "px";
+      inactDots.forEach((d, i) => { d.style.left = INACTIVE_POS[index][i] + "px"; });
+      if (animHandle) cancelAnimationFrame(animHandle);
+      animStart = null; animFrom = animTo;
+      animTo = valToRot(displayVal, m.min, m.max);
+      animHandle = requestAnimationFrame(animate);
+    }
+
+    segEls.forEach(el => el.classList.add("seg-inactive"));
+
+    // Tooltip
+    const infoIcon = document.querySelector('#meter-card .meter-info-icon');
+    const tip = document.getElementById('meter-tooltip');
+    if (infoIcon && tip) {
+      document.body.appendChild(tip);
+      tip.style.cssText = 'display:none;position:fixed;z-index:2147483647;width:185px;background:#0d0d17;color:rgba(255,255,255,.85);font-size:11px;line-height:1.5;padding:8px 10px;border-radius:6px;border:1px solid rgba(152,188,255,.2);box-shadow:0 4px 20px rgba(0,0,0,.6);pointer-events:none;';
+      infoIcon.addEventListener('mouseenter', () => {
+        const r = infoIcon.getBoundingClientRect();
+        tip.style.cssText = 'display:block;position:fixed;z-index:2147483647;width:185px;background:#0d0d17;color:rgba(255,255,255,.85);font-size:11px;line-height:1.5;padding:8px 10px;border-radius:6px;border:1px solid rgba(152,188,255,.2);box-shadow:0 4px 20px rgba(0,0,0,.6);pointer-events:none;top:' + r.top + 'px;left:' + (r.left - 185 - 8) + 'px;font-family:Zain,sans-serif;';
+      });
+      infoIcon.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+    }
+
+    prevBtn.addEventListener("click", () => render((activeIndex - 1 + METERS.length) % METERS.length));
+    nextBtn.addEventListener("click", () => render((activeIndex + 1) % METERS.length));
+
+    // ── Live data fetchers ────────────────────────────────────────────────────
+
+    async function yahooChart(symbol) {
+      const path   = `/v8/finance/chart/${encodeURIComponent(symbol)}`;
+      const params = `interval=1d&range=5d&includePrePost=false`;
+      const target = `${YH_BASE}${path}?${params}`;
+      const url    = IS_LOCAL
+        ? `${CP}${encodeURIComponent(target)}`
+        : `/api/yahoo?path=${encodeURIComponent(path)}&${params}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const meta = data?.chart?.result?.[0]?.meta;
+      if (!meta) throw new Error(`No data for ${symbol}`);
+      return meta.regularMarketPrice ?? meta.previousClose;
+    }
+
+    async function loadLiveMeters() {
+      try {
+        // F&G — CNN
+        const fgUrl = IS_LOCAL
+          ? `${CP}${encodeURIComponent('https://production.dataviz.cnn.io/index/fearandgreed/graphdata')}`
+          : 'https://production.dataviz.cnn.io/index/fearandgreed/graphdata';
+        const fgRes  = await fetch(fgUrl);
+        if (fgRes.ok) {
+          const fgData = await fgRes.json();
+          const score  = fgData?.fear_and_greed?.score;
+          if (score != null) { METERS[0].value = Math.round(score); render(activeIndex); }
+        }
+      } catch(e) { console.warn('[KEYN meter] F&G failed:', e.message); }
+
+      try {
+        // VIX — Yahoo ^VIX
+        const vix = await yahooChart('^VIX');
+        METERS[1].value = vix;
+        render(activeIndex);
+      } catch(e) { console.warn('[KEYN meter] VIX failed:', e.message); }
+
+      try {
+        // SKEW — Yahoo ^SKEW
+        const skew = await yahooChart('^SKEW');
+        METERS[2].value = skew;
+        render(activeIndex);
+      } catch(e) { console.warn('[KEYN meter] SKEW failed:', e.message); }
+
+      try {
+        // BUFF — Yahoo ^W5000 + static GDP (Q4 2024 BEA: $29.18T)
+        const w5000 = await yahooChart('^W5000');
+        const capT  = (w5000 * 1.37) / 1000;
+        METERS[3].value = Math.round((capT / 29.18) * 100);
+        render(activeIndex);
+      } catch(e) { console.warn('[KEYN meter] BUFF failed:', e.message); }
+    }
+
+    render(0);
+    loadLiveMeters();
+  })();
+
+  // ── Shortlist data — defined here so the news block can read it on load ──
+  window.KEYN_SHORTLIST = [
+    { ticker:'AAPL',  type:'stock', pct:{ '1D':'+1.24%','1W':'+2.8%','1M':'+5.1%','1Y':'+18.4%','ALL':'+640%' }, dir:{ '1D':'up','1W':'up','1M':'up','1Y':'up','ALL':'up' }, prices:[210,212,211,214,216,215,217,219,218,220,219,222,221,224] },
+    { ticker:'TSLA',  type:'stock', pct:{ '1D':'-2.14%','1W':'-5.3%','1M':'-8.2%','1Y':'-22.1%','ALL':'+480%' }, dir:{ '1D':'dn','1W':'dn','1M':'dn','1Y':'dn','ALL':'up' }, prices:[285,281,279,276,274,271,268,265,263,260,258,256,254,252] },
+    { ticker:'NVDA',  type:'stock', pct:{ '1D':'+3.42%','1W':'+6.1%','1M':'+12.4%','1Y':'+92.3%','ALL':'+1840%' }, dir:{ '1D':'up','1W':'up','1M':'up','1Y':'up','ALL':'up' }, prices:[880,892,905,918,911,924,936,948,942,955,968,961,974,987] },
+    { ticker:'MSFT',  type:'stock', pct:{ '1D':'+0.87%','1W':'+1.9%','1M':'+4.3%','1Y':'+14.2%','ALL':'+920%' }, dir:{ '1D':'up','1W':'up','1M':'up','1Y':'up','ALL':'up' }, prices:[415,418,417,420,422,421,423,425,424,426,425,427,426,429] },
+    { ticker:'AMZN',  type:'stock', pct:{ '1D':'-0.53%','1W':'+1.1%','1M':'+3.8%','1Y':'+22.6%','ALL':'+1240%' }, dir:{ '1D':'dn','1W':'up','1M':'up','1Y':'up','ALL':'up' }, prices:[198,197,199,198,197,199,198,200,199,198,200,199,198,197] },
+    { ticker:'META',  type:'stock', pct:{ '1D':'+1.76%','1W':'+4.2%','1M':'+9.1%','1Y':'+48.3%','ALL':'+380%' }, dir:{ '1D':'up','1W':'up','1M':'up','1Y':'up','ALL':'up' }, prices:[580,588,595,602,596,603,610,618,612,619,626,620,627,634] },
+    { ticker:'SPY',   type:'etf',   pct:{ '1D':'-1.33%','1W':'-0.8%','1M':'+2.1%','1Y':'+18.2%','ALL':'+210%' }, dir:{ '1D':'dn','1W':'dn','1M':'up','1Y':'up','ALL':'up' }, prices:[480,478,479,476,474,477,472,470,471,468,469,466,467,465] },
+    { ticker:'QQQ',   type:'etf',   pct:{ '1D':'-1.58%','1W':'-1.2%','1M':'+3.4%','1Y':'+22.4%','ALL':'+310%' }, dir:{ '1D':'dn','1W':'dn','1M':'up','1Y':'up','ALL':'up' }, prices:[445,443,441,439,437,440,436,434,435,432,433,430,431,429] },
+  ];
+
+  // ── News — RSS via rss2json, shortlist-aware ─────────────────────────────
+  (function() {
+
+    const API_KEY = KEYN_CONFIG.RSS2JSON_KEY;
+    const BASE    = 'https://api.rss2json.com/v1/api.json';
+
+    // General financial RSS feeds
+    const GENERAL_FEEDS = [
+      { url: 'https://feeds.reuters.com/reuters/businessNews',                    name: 'Reuters' },
+      { url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html',             name: 'CNBC' },
+      { url: 'https://feeds.content.dowjones.io/public/rss/mw_realtimeheadlines', name: 'MarketWatch' },
+      { url: 'https://finance.yahoo.com/news/rssindex',                           name: 'Yahoo Finance' },
+      { url: 'https://feeds.apnews.com/rss/business',                             name: 'Associated Press' },
+      { url: 'https://www.ft.com/rss/home/uk',                                    name: 'Financial Times' },
+      { url: 'https://rss.nytimes.com/services/xml/rss/nyt/Business.xml',         name: 'New York Times' },
+      { url: 'https://feeds.washingtonpost.com/rss/business',                     name: 'Washington Post' },
+    ];
+
+    const newsBody    = document.getElementById('news-body');
+    const searchInput = document.getElementById('news-search-input');
+    const clearBtn    = document.getElementById('news-bar-clear');
+
+    let allArticles = [];
+    let debounce    = null;
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    function fmtDate(iso) {
+      return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function fetchFeed(feedUrl, sourceName, ticker) {
+      const url = `${BASE}?rss_url=${encodeURIComponent(feedUrl)}&api_key=${API_KEY}&count=100`;
+      return fetch(url)
+        .then(r => r.json())
+        .then(data => {
+          if (data.status !== 'ok') return [];
+          return (data.items || []).map(item => ({
+            ...item,
+            sourceName,
+            ticker: ticker || null, // null = general feed
+          }));
+        })
+        .catch(() => []);
+    }
+
+    function setLoading() {
+      newsBody.innerHTML = `
+        <div class="news-status">
+          <div class="news-spinner"></div>
+          <span>Loading articles…</span>
+        </div>`;
+    }
+
+    function setError(msg) {
+      newsBody.innerHTML = `
+        <div class="news-status news-status-error">
+          <span class="news-status-icon">⚠</span>
+          <span>${msg}</span>
+        </div>`;
+    }
+
+    function renderArticles(articles, query) {
+      if (!articles.length) {
+        newsBody.innerHTML = `
+          <div class="news-status">
+            <span class="news-status-icon">🔍</span>
+            <span>No results${query ? ` for "${query}"` : ''}.</span>
+          </div>`;
+        return;
+      }
+      newsBody.innerHTML = articles.map(a => {
+        const thumb = a.thumbnail
+          ? `<img class="news-thumb" src="${a.thumbnail}" alt="" onerror="this.style.display='none'" loading="lazy" />`
+          : '';
+        const title  = (a.title || '').replace(/ [-|] [^-|]+$/, '').trim();
+        const badge  = a.ticker
+          ? `<span class="news-ticker-badge">${a.ticker}</span>`
+          : '';
+        return `
+          <div class="news-article" onclick="window.open(${JSON.stringify(a.link)},'_blank')">
+            ${thumb}
+            <div class="news-text">
+              <span class="news-headline">${title}</span>
+              <div class="news-meta">
+                ${badge}
+                <span class="news-source-label">${a.sourceName}</span>
+                <span class="news-date">${fmtDate(a.pubDate)}</span>
+                <a class="news-read" href="${a.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">Read →</a>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function applySearch(query) {
+      if (!query) { renderArticles(allArticles, null); return; }
+      const q       = query.replace(/^\$/, '').toLowerCase();
+      const matched = allArticles.filter(a =>
+        (a.title       || '').toLowerCase().includes(q) ||
+        (a.description || '').toLowerCase().includes(q) ||
+        (a.ticker      || '').toLowerCase() === q
+      );
+      renderArticles(matched, query);
+    }
+
+    // ── Loader — general feeds + one per shortlist ticker ────────────────────
+
+    async function loadFeeds() {
+      setLoading();
+
+      // Build ticker feeds from shortlist (read from global set by shortlist IIFE)
+      const shortlist   = window.KEYN_SHORTLIST || [];
+      const tickerFeeds = shortlist.map(s => ({
+        url:    `https://finance.yahoo.com/rss/headline?s=${s.ticker}`,
+        name:   `Yahoo Finance`,
+        ticker: s.ticker,
+      }));
+
+      // Fire all requests in parallel
+      const allFeeds = [
+        ...GENERAL_FEEDS.map(f => fetchFeed(f.url, f.name, null)),
+        ...tickerFeeds.map(f  => fetchFeed(f.url, f.name, f.ticker)),
+      ];
+
+      const results = await Promise.allSettled(allFeeds);
+
+      const seen = new Set();
+      allArticles = results
+        .filter(r  => r.status === 'fulfilled')
+        .flatMap(r => r.value)
+        .filter(a  => {
+          if (seen.has(a.link)) return false;
+          seen.add(a.link);
+          return true;
+        })
+        .sort((a, b) => {
+          // Ticker articles always above general, then newest first within each group
+          if (a.ticker && !b.ticker) return -1;
+          if (!a.ticker && b.ticker) return  1;
+          return new Date(b.pubDate) - new Date(a.pubDate);
+        });
+
+      if (!allArticles.length) {
+        setError('Could not load any feeds — check your rss2json key.');
+        return;
+      }
+
+      applySearch(searchInput.value.trim() || null);
+    }
+
+    // ── Search input ──────────────────────────────────────────────────────────
+
+    clearBtn.style.display = 'none';
+
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.trim();
+      clearBtn.style.display = q ? 'flex' : 'none';
+      clearTimeout(debounce);
+      debounce = setTimeout(() => applySearch(q || null), 200);
+    });
+
+    clearBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      clearBtn.style.display = 'none';
+      searchInput.focus();
+      applySearch(null);
+    });
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    loadFeeds();
+
+  })();
+
+  // ── Portfolio Chart ──────────────────────────────────────────────────────
+  (function() {
+
+    let positions = [];
+    try { positions = JSON.parse(localStorage.getItem('keyn_portfolio') || '[]'); } catch(e) {}
+
+    const canvas    = document.getElementById('portfolio-canvas');
+    const valueEl   = document.getElementById('port-value');
+    const deltaEl   = document.getElementById('port-delta');
+    const deltaText = document.getElementById('port-delta-text');
+    const tabs      = document.querySelectorAll('#portfolio-time-tabs .time-tab');
+
+    let activeRange = '1D';
+    let _portVals   = [];
+    let _portTimes  = [];
+    let _chartXOf   = null;
+
+    const RANGE_PARAMS = {
+      '1D':  { interval: '5m',  range: '1d'  },
+      '1W':  { interval: '60m', range: '5d'  },
+      '1M':  { interval: '1d',  range: '1mo' },
+      'YTD': { interval: '1d',  range: 'ytd' },
+      '1Y':  { interval: '1d',  range: '1y'  },
+      'ALL': { interval: '1wk', range: 'max' },
+    };
+    const rangeCache = {};
+    window._keynHomeRangeCache = rangeCache; // exposed for stocks panel
+
+    function getRangeData(p) {
+      return rangeCache[`${p.ticker}:${activeRange}`] || { prices: p.prices || [], times: p.times || [] };
+    }
+
+    function formatTimeLabel(ts, range, tz) {
+      const d = new Date(ts * 1000), opt = { timeZone: tz };
+      if (range === '1D')
+        return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false, ...opt });
+      if (range === '1W' || range === '1M') {
+        const dp = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', ...opt });
+        const tp = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false, ...opt });
+        return `${dp} · ${tp}`;
+      }
+      if (range === 'YTD')
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', ...opt });
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', ...opt });
+    }
+
+    function fmtVal(v) {
+      return '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function updateHeader(vals) {
+      if (!vals.length) return;
+      const cur  = vals[vals.length - 1];
+      const costBasis  = positions.reduce((s, p) => s + p.avgPrice * p.shares, 0);
+      const prevClose  = positions.reduce((s, p) => {
+        const pc = p.prevClose != null ? p.prevClose : (p.currentPrice || p.avgPrice) - (p.change || 0);
+        return s + pc * p.shares;
+      }, 0);
+      const refVal = activeRange === '1D' ? prevClose : activeRange === 'ALL' ? costBasis : vals[0];
+      const abs  = cur - refVal;
+      const pct  = refVal > 0 ? (abs / refVal) * 100 : 0;
+      const isUp = abs >= 0;
+      window.KEYN_DRUM.tick(valueEl, fmtVal(cur));
+      deltaEl.className = 'portfolio-delta ' + (isUp ? 'color-up' : 'color-dn');
+      const sign = isUp ? '+' : '-';
+      deltaText.textContent = sign + '$' + Math.abs(abs).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) +
+                              ' (' + Math.abs(pct).toFixed(2) + '%)';
+    }
+
+    function drawChart(hoverIdx = null) {
+      const wrap = canvas.parentElement;
+      const W = wrap.clientWidth, H = wrap.clientHeight;
+      if (!W || !H) return;
+
+      canvas.width  = W * devicePixelRatio;
+      canvas.height = H * devicePixelRatio;
+      canvas.style.width  = W + 'px';
+      canvas.style.height = H + 'px';
+
+      const ctx = canvas.getContext('2d');
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+
+      let maxLen = 0, longestTimes = [];
+      positions.forEach(p => {
+        const { prices, times } = getRangeData(p);
+        if (prices.length > maxLen) { maxLen = prices.length; longestTimes = times; }
+      });
+      if (maxLen < 2) return;
+      _portTimes = longestTimes;
+
+      const vals = [];
+      for (let i = 0; i < maxLen; i++) {
+        let total = 0;
+        positions.forEach(p => {
+          const { prices } = getRangeData(p);
+          total += prices[Math.min(i, prices.length - 1)] * p.shares;
+        });
+        vals.push(total);
+      }
+      _portVals = vals;
+
+      const n         = vals.length;
+      const costBasis = positions.reduce((s, p) => s + p.avgPrice * p.shares, 0);
+      const prevClose = positions.reduce((s, p) => {
+        const pc = p.prevClose != null ? p.prevClose : (p.currentPrice || p.avgPrice) - (p.change || 0);
+        return s + pc * p.shares;
+      }, 0);
+      const refVal = activeRange === '1D' ? prevClose : activeRange === 'ALL' ? costBasis : vals[0];
+
+      const allV   = [...vals, refVal];
+      const lo     = Math.min(...allV);
+      const hi     = Math.max(...allV);
+      const spread = Math.max(hi - lo, hi * 0.0008);
+      const minV   = lo - spread * 0.2;
+      const maxV   = hi + spread * 0.2;
+      const PL = 12, PR = 12, PT = 16, PB = 12;
+      const isUp = vals[n - 1] >= refVal;
+
+      const xOf = i => PL + (n > 1 ? i / (n - 1) : 0) * (W - PL - PR);
+      const yOf = v => PT + (1 - (v - minV) / (maxV - minV)) * (H - PT - PB);
+      _chartXOf = xOf;
+
+      // Reference dashed line
+      ctx.save();
+      ctx.setLineDash([4, 6]);
+      ctx.beginPath(); ctx.moveTo(PL, yOf(refVal)); ctx.lineTo(W - PR, yOf(refVal));
+      ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.restore();
+
+      // Gradient fill
+      const fillGrad = ctx.createLinearGradient(0, 0, 0, H);
+      fillGrad.addColorStop(0,    isUp ? 'rgba(43,255,0,0.35)' : 'rgba(255,26,26,0.35)');
+      fillGrad.addColorStop(0.55, isUp ? 'rgba(43,255,0,0.08)' : 'rgba(255,26,26,0.08)');
+      fillGrad.addColorStop(1,    'rgba(0,0,0,0)');
+      ctx.beginPath(); ctx.moveTo(xOf(0), yOf(vals[0]));
+      for (let i = 1; i < n; i++) {
+        const m = (xOf(i-1)+xOf(i))/2;
+        ctx.bezierCurveTo(m, yOf(vals[i-1]), m, yOf(vals[i]), xOf(i), yOf(vals[i]));
+      }
+      ctx.lineTo(xOf(n-1), H); ctx.lineTo(PL, H); ctx.closePath();
+      ctx.fillStyle = fillGrad; ctx.fill();
+
+      // Line
+      const lineColor = isUp ? '#2bff00' : '#ff1a1a';
+      ctx.beginPath(); ctx.moveTo(xOf(0), yOf(vals[0]));
+      for (let i = 1; i < n; i++) {
+        const m = (xOf(i-1)+xOf(i))/2;
+        ctx.bezierCurveTo(m, yOf(vals[i-1]), m, yOf(vals[i]), xOf(i), yOf(vals[i]));
+      }
+      ctx.strokeStyle = lineColor; ctx.lineWidth = 2; ctx.stroke();
+
+      // Dot / hover
+      if (hoverIdx !== null) {
+        const hx = xOf(hoverIdx), hy = yOf(vals[hoverIdx]);
+        ctx.save(); ctx.setLineDash([3, 5]);
+        ctx.beginPath(); ctx.moveTo(hx, PT); ctx.lineTo(hx, H - PB);
+        ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 1; ctx.stroke();
+        ctx.restore();
+        ctx.beginPath(); ctx.arc(hx, hy, 5, 0, Math.PI * 2); ctx.fillStyle = lineColor; ctx.fill();
+        ctx.beginPath(); ctx.arc(hx, hy, 3, 0, Math.PI * 2); ctx.fillStyle = '#0d0d17'; ctx.fill();
+        const lbl = _portTimes[hoverIdx] || '';
+        if (lbl) {
+          ctx.font = 'bold 11px Zain, sans-serif';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+          const lx = Math.max(28, Math.min(W - 28, hx));
+          const tw = ctx.measureText(lbl).width;
+          ctx.fillStyle = 'rgba(32,41,49,0.85)';
+          ctx.beginPath(); ctx.roundRect(lx - tw/2 - 6, H - PB - 18, tw + 12, 16, 4); ctx.fill();
+          ctx.fillStyle = 'rgba(255,255,255,0.55)';
+          ctx.fillText(lbl, lx, H - PB - 3);
+        }
+      } else {
+        ctx.beginPath(); ctx.arc(xOf(n-1), yOf(vals[n-1]), 4, 0, Math.PI * 2);
+        ctx.fillStyle = lineColor; ctx.fill();
+      }
+
+      updateHeader(vals);
+    }
+
+    async function fetchAndDraw(range) {
+      if (!positions.length) return;
+      const params = RANGE_PARAMS[range];
+      canvas.style.cursor = 'wait';
+
+      await Promise.allSettled(positions.map(async p => {
+        const key = `${p.ticker}:${range}`;
+        if (rangeCache[key]) return;
+        try {
+          const resp = await fetch(`/api/chart?symbol=${encodeURIComponent(p.ticker)}&interval=${params.interval}&range=${params.range}`);
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+          const result = (await resp.json())?.chart?.result?.[0];
+          if (!result) return;
+          const rawTS    = result.timestamp || [];
+          const rawClose = result.indicators?.quote?.[0]?.close || [];
+          const tz       = result.meta?.exchangeTimezoneName || 'America/New_York';
+          // Also grab prevClose from chart meta for accurate 1D reference
+          if (range === '1D') {
+            const pc = result.meta?.regularMarketPreviousClose || result.meta?.chartPreviousClose;
+            if (pc && !p.prevClose) p.prevClose = pc;
+          }
+          let pairs = rawTS.map((ts, i) => ({ ts, price: rawClose[i] })).filter(pt => pt.price != null);
+          if (range === 'ALL' && p.purchaseDate) {
+            const pts = new Date(p.purchaseDate).getTime() / 1000;
+            const f   = pairs.filter(pt => pt.ts >= pts - 86400);
+            if (f.length >= 2) pairs = f;
+          }
+          rangeCache[key] = {
+            prices: pairs.map(pt => pt.price),
+            times:  pairs.map(pt => formatTimeLabel(pt.ts, range, tz)),
+          };
+        } catch(e) { console.warn('[KEYN home] chart fetch failed:', e.message); }
+      }));
+
+      canvas.style.cursor = 'crosshair';
+      drawChart();
+      window.dispatchEvent(new CustomEvent('keyn-range-change', { detail: range }));
+    }
+
+    // Hover
+    canvas.addEventListener('mousemove', e => {
+      if (!_portVals.length || !_chartXOf) return;
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      let best = 0, bestD = Infinity;
+      for (let i = 0; i < _portVals.length; i++) {
+        const d = Math.abs(_chartXOf(i) - mx);
+        if (d < bestD) { bestD = d; best = i; }
+      }
+      drawChart(best);
+      window.KEYN_DRUM.tick(valueEl, fmtVal(_portVals[best]));
+    });
+    canvas.addEventListener('mouseleave', () => {
+      if (_portVals.length) drawChart();
+    });
+
+    // Range tabs
+    tabs.forEach(tab => tab.addEventListener('click', () => {
+      activeRange = tab.dataset.range;
+      tabs.forEach(t => t.classList.toggle('active', t.dataset.range === activeRange));
+      fetchAndDraw(activeRange);
+    }));
+
+    window.addEventListener('resize', () => { if (_portVals.length) drawChart(); });
+
+    // Bootstrap: fetch 1D data immediately
+    fetchAndDraw('1D');
+
+  })();
+
+
+
+
+  // ── Portfolio toggle ──────────────────────────────────────────────────────
+  (function() {
+    // Load real positions from localStorage; fall back to demo data if empty
+    let _positions = [];
+    try { _positions = JSON.parse(localStorage.getItem('keyn_portfolio') || '[]'); } catch(e) {}
+
+    const DEMO_STOCKS = [
+      { ticker:'CRSP', shares:'100 shares',  pct:'+3.29%', dir:'up', prices:[42,44,43,46,48,47,50,52,51,55,54,58,57,61] },
+      { ticker:'SOFI', shares:'286 shares',  pct:'+5.53%', dir:'up', prices:[10,11,10,12,13,12,14,15,14,16,15,17,16,18] },
+      { ticker:'ARKK', shares:'10 shares',   pct:'-1.49%', dir:'dn', prices:[65,63,64,61,60,62,59,57,58,55,56,53,54,52] },
+      { ticker:'PYPL', shares:'1.4K shares', pct:'+2.42%', dir:'up', prices:[78,79,78,81,83,82,84,86,85,87,86,89,88,91] },
+      { ticker:'SE',   shares:'80 shares',   pct:'-0.13%', dir:'dn', prices:[55,54,55,53,52,54,51,50,52,49,50,48,49,47] },
+      { ticker:'AMZN', shares:'35 shares',   pct:'+1.67%', dir:'up', prices:[180,182,181,184,186,185,188,190,189,192,191,194,193,196] },
+    ];
+
+    // Build display rows for a given range
+    function buildStockRows(range) {
+      if (!_positions.length) return DEMO_STOCKS;
+      return _positions.map(p => {
+        let pct, dir, prices;
+        const sharesLabel = p.shares >= 1000
+          ? (p.shares / 1000).toFixed(1).replace(/\.0$/, '') + 'K shares'
+          : p.shares + ' shares';
+
+        const rangeData = (window._keynPosRangeData || {})[range];
+        const posData   = rangeData && rangeData[p.ticker];
+
+        if (range === '1D') {
+          // Use fresh 1D prices from home portfolio chart's rangeCache if available
+          const cached1D = (window._keynHomeRangeCache || {})[`${p.ticker}:1D`];
+          if (cached1D && cached1D.prices.length >= 2) {
+            const freshPrices = cached1D.prices;
+            const prevClose   = p.prevClose != null ? p.prevClose : (p.currentPrice - (p.change || 0));
+            const lastPrice   = freshPrices[freshPrices.length - 1];
+            const pctVal      = prevClose > 0 ? ((lastPrice - prevClose) / prevClose) * 100 : 0;
+            pct    = (pctVal >= 0 ? '+' : '') + pctVal.toFixed(2) + '%';
+            dir    = pctVal >= 0 ? 'up' : 'dn';
+            prices = freshPrices;
+          } else {
+            // Fall back to stored changePct
+            const pct1D = p.changePct != null ? p.changePct : ((p.currentPrice - p.avgPrice) / p.avgPrice) * 100;
+            pct    = (pct1D >= 0 ? '+' : '') + pct1D.toFixed(2) + '%';
+            dir    = pct1D >= 0 ? 'up' : 'dn';
+            prices = p.prices || [];
+          }
+        } else {
+          // Other range: use fetched per-position prices
+          const pairs = posData.pairs || [];
+          const pPrices = pairs.map(pt => pt.price);
+          const open    = pPrices[0], close = pPrices[pPrices.length - 1];
+          const pctVal  = open > 0 ? ((close - open) / open) * 100 : 0;
+          pct    = (pctVal >= 0 ? '+' : '') + pctVal.toFixed(2) + '%';
+          dir    = pctVal >= 0 ? 'up' : 'dn';
+          prices = pPrices;
+        }
+
+        return { ticker: p.ticker, shares: sharesLabel, pct, dir, prices };
+      });
+    }
+
+    const btn      = document.getElementById('portfolio-btn');
+    const btnIcon  = document.getElementById('portfolio-btn-icon');
+    const panel    = document.getElementById('stocks-panel');
+    const content  = document.getElementById('stocks-content');
+    const closeBtn = document.getElementById('stocks-panel-close');
+    const listEl   = document.getElementById('stocks-panel-list');
+    let expanded   = false;
+    let currentRange = '1D';
+
+    function drawSparkline(canvas, prices, dir) {
+      if (!prices || prices.length < 2) return;
+      const DPR  = window.devicePixelRatio || 1;
+      const W    = 110, H = 40; // logical CSS pixels
+
+      // Set pixel buffer to match CSS size exactly
+      canvas.width  = W * DPR;
+      canvas.height = H * DPR;
+      canvas.style.width  = W + 'px';
+      canvas.style.height = H + 'px';
+
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.scale(DPR, DPR);
+
+      const n   = prices.length;
+      const lo  = Math.min(...prices);
+      const hi  = Math.max(...prices);
+      const pad = (hi - lo) * 0.1 || 0.01;
+      const minV = lo - pad, maxV = hi + pad;
+
+      const xOf = i => (i / (n - 1)) * W;
+      const yOf = v => H - ((v - minV) / (maxV - minV)) * H;
+
+      const lineColor = dir === 'up' ? '#189400' : dir === 'dn' ? '#ff1a1a' : '#aaa';
+
+      // Gradient fill
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      if (dir === 'up') {
+        grad.addColorStop(0, 'rgba(24,148,0,0.25)');
+        grad.addColorStop(1, 'rgba(24,148,0,0)');
+      } else if (dir === 'dn') {
+        grad.addColorStop(0, 'rgba(255,26,26,0.25)');
+        grad.addColorStop(1, 'rgba(255,26,26,0)');
+      } else {
+        grad.addColorStop(0, 'rgba(170,170,170,0.2)');
+        grad.addColorStop(1, 'rgba(170,170,170,0)');
+      }
+      ctx.beginPath();
+      ctx.moveTo(xOf(0), yOf(prices[0]));
+      for (let i = 1; i < n; i++) ctx.lineTo(xOf(i), yOf(prices[i]));
+      ctx.lineTo(xOf(n - 1), H);
+      ctx.lineTo(xOf(0), H);
+      ctx.closePath();
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Crisp line — straight segments, 1px
+      ctx.beginPath();
+      ctx.moveTo(xOf(0), yOf(prices[0]));
+      for (let i = 1; i < n; i++) ctx.lineTo(xOf(i), yOf(prices[i]));
+      ctx.strokeStyle = lineColor;
+      ctx.lineWidth   = 1;
+      ctx.lineJoin    = 'round';
+      ctx.stroke();
+    }
+
+    function buildStocksPanel() {
+      listEl.innerHTML = '';
+      buildStockRows(currentRange).forEach(s => {
+        const row = document.createElement('div');
+        row.className = 'sp-row';
+        const DPR = window.devicePixelRatio || 1;
+        row.innerHTML = `<div class="sp-info"><span class="sp-ticker">${s.ticker}</span><span class="sp-shares">${s.shares}</span></div><canvas class="sp-canvas"></canvas><span class="sp-pct ${s.dir==='up'?'color-up':'color-dn'}">${s.pct}</span>`;
+        listEl.appendChild(row);
+        drawSparkline(row.querySelector('canvas'), s.prices, s.dir);
+      });
+    }
+
+    // Rebuild when chart range changes (even if panel is closed, ready for next open)
+    window.addEventListener('keyn-range-change', e => {
+      currentRange = e.detail;
+      if (expanded) buildStocksPanel();
+    });
+
+    // ── Shortlist ─────────────────────────────────────────────────────────
+    const SL_DATA = window.KEYN_SHORTLIST;
+
+    const slRows    = document.getElementById('sl-rows');
+    const slFilters = document.querySelectorAll('#sl-filters .sl-filter');
+    const slPeriods = document.querySelectorAll('#sl-period-tabs .sl-period');
+    let slFilter    = 'all';
+    let slPeriod    = '1D';
+
+    function slDrawSpark(canvas, prices, dir) {
+      const DPR = window.devicePixelRatio || 1;
+      const W = canvas.width / DPR, H = canvas.height / DPR;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(DPR, DPR);
+      const n = prices.length;
+      const min = Math.min(...prices) * 0.98, max = Math.max(...prices) * 1.02;
+      const lineColor = dir === 'up' ? '#189400' : dir === 'dn' ? '#A80D0D' : '#888';
+      function x(i) { return (i / (n-1)) * W; }
+      function y(v) { return H - ((v - min) / (max - min)) * H; }
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      if (dir === 'up') { grad.addColorStop(0, 'rgba(43,255,0,0.35)'); grad.addColorStop(1, 'rgba(43,255,0,0)'); }
+      else if (dir === 'dn') { grad.addColorStop(0, 'rgba(255,26,26,0.35)'); grad.addColorStop(1, 'rgba(255,26,26,0)'); }
+      else { grad.addColorStop(0, 'rgba(150,150,150,0.3)'); grad.addColorStop(1, 'rgba(150,150,150,0)'); }
+      ctx.beginPath(); ctx.moveTo(x(0), y(prices[0]));
+      for (let i = 1; i < n; i++) { const mx = (x(i-1)+x(i))/2; ctx.bezierCurveTo(mx,y(prices[i-1]),mx,y(prices[i]),x(i),y(prices[i])); }
+      ctx.lineTo(x(n-1), H); ctx.lineTo(0, H); ctx.closePath();
+      ctx.fillStyle = grad; ctx.fill();
+      ctx.beginPath(); ctx.moveTo(x(0), y(prices[0]));
+      for (let i = 1; i < n; i++) { const mx = (x(i-1)+x(i))/2; ctx.bezierCurveTo(mx,y(prices[i-1]),mx,y(prices[i]),x(i),y(prices[i])); }
+      ctx.strokeStyle = lineColor; ctx.lineWidth = 1.5; ctx.stroke();
+    }
+
+    function renderShortlist() {
+      slRows.innerHTML = '';
+      const visible = SL_DATA.filter(s => slFilter === 'all' || s.type === slFilter);
+      visible.forEach(s => {
+        const dir = s.dir[slPeriod];
+        const pct = s.pct[slPeriod];
+        const row = document.createElement('div');
+        row.className = 'sl-row';
+        const DPR = window.devicePixelRatio || 1;
+        row.innerHTML = `
+          <span class="sl-ticker">${s.ticker}</span>
+          <canvas class="sl-canvas" width="${116*DPR}" height="${34*DPR}"></canvas>
+          <span class="sl-pct ${dir === 'up' ? 'sl-up' : dir === 'dn' ? 'sl-dn' : 'sl-flat'}">${pct}</span>
+        `;
+        slRows.appendChild(row);
+        slDrawSpark(row.querySelector('canvas'), s.prices, dir);
+      });
+    }
+
+    slFilters.forEach(btn => {
+      btn.addEventListener('click', () => {
+        slFilters.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        slFilter = btn.dataset.filter;
+        renderShortlist();
+      });
+    });
+    slPeriods.forEach(tab => {
+      tab.addEventListener('click', () => {
+        slPeriods.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        slPeriod = tab.dataset.period;
+        renderShortlist();
+      });
+    });
+
+    renderShortlist();
+
+    function openPanel() {
+      expanded = true;
+      buildStocksPanel();
+      panel.classList.add('open');
+      content.classList.add('visible');
+      btnIcon.src = 'svg/Close-Icon.svg';
+    }
+
+    function closePanel() {
+      expanded = false;
+      panel.classList.remove('open');
+      content.classList.remove('visible');
+      btnIcon.src = 'svg/Open-Icon.svg';
+    }
+
+    btn.addEventListener('click', () => expanded ? closePanel() : openPanel());
+    closeBtn.addEventListener('click', closePanel);
+  })();
+</script>
+<script src="partials/keyn-partials.js"></script>
+<script>KEYN.initPage('dashboard');</script>
+</body>
+</html>

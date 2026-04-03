@@ -1,0 +1,30 @@
+<!--
+  KEYN Topbar — Reference Template
+  This file documents the topbar structure.
+  The actual topbar is injected by partials/keyn-partials.js.
+  Call: KEYN.initPage('dashboard')  ← initialises both sidebar and topbar.
+-->
+<div class="topbar">
+  <div class="search-wrap" id="search-wrap">
+    <!-- Spacer holds layout width before search expands -->
+    <div class="search-spacer"></div>
+    <!-- Absolutely-positioned search container — slides open on focus -->
+    <div class="search-container" id="search-container">
+      <div class="search-input-row">
+        <img class="search-icon"
+             src="https://www.figma.com/api/mcp/asset/fd139b27-eea2-459f-a327-a1be28ce6890"
+             alt="search" />
+        <input class="search-input"
+               id="search-input"
+               type="text"
+               placeholder="Search"
+               autocomplete="off" />
+      </div>
+      <div class="search-dropdown" id="search-dropdown"></div>
+    </div>
+  </div>
+  <div class="profile-area">
+    <span class="username">@jacobzlot</span>
+    <div class="avatar">JZ</div>
+  </div>
+</div>

@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KEYN — Ticker Diagnostic</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+  :root {
+    --bg:      #0a0c0f;
+    --surface: #111418;
+    --border:  #1e2329;
+    --text:    #c9d1d9;
+    --muted:   #4a5568;
+    --accent:  #f0b429;
+    --green:   #3ddc84;
+    --red:     #ff5c5c;
+    --blue:    #58a6ff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+    padding: 28px 24px;
+  }
+
+  header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 6px;
+  }
+  header h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+  header span {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .subtitle {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 22px;
+  }
+
+  /* ── Controls ── */
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 22px;
+    flex-wrap: wrap;
+  }
+  #run-btn {
+    background: var(--accent);
+    color: #0a0c0f;
+    border: none;
+    border-radius: 4px;
+    padding: 9px 22px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: opacity .15s;
+    white-space: nowrap;
+  }
+  #run-btn:hover    { opacity: .85; }
+  #run-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  #copy-btn {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 9px 16px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: color .15s, border-color .15s;
+    white-space: nowrap;
+  }
+  #copy-btn:hover { color: var(--text); border-color: var(--muted); }
+
+  .summary-pills { display: flex; gap: 7px; flex-wrap: wrap; }
+  .pill {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  .pill.total   { border-color: var(--muted); color: var(--muted); }
+  .pill.ok      { border-color: var(--green); color: var(--green); }
+  .pill.fail    { border-color: var(--red);   color: var(--red);   }
+  .pill.pending { border-color: var(--blue);  color: var(--blue);  }
+
+  .progress-wrap {
+    height: 2px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-bottom: 22px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width .2s ease;
+    border-radius: 2px;
+  }
+
+  /* ── Region block ── */
+  .region-block {
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .region-header {
+    background: var(--surface);
+    padding: 9px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .region-key {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--accent);
+    background: #1e1a0a;
+    border: 1px solid #3d3010;
+    padding: 2px 7px;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .region-label { font-size: 13px; font-weight: 600; color: var(--text); }
+  .region-count {
+    margin-left: auto;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  /* ── Ticker table ── */
+  .ticker-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+  .ticker-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background .1s;
+  }
+  .ticker-table tbody tr:last-child { border-bottom: none; }
+  .ticker-table tbody tr:hover { background: #0e1117; }
+
+  /* Column widths */
+  .col-dot    { width: 32px; }
+  .col-symbol { width: 130px; }
+  .col-name   { width: 72px; }
+  .col-price  { width: 110px; }
+  .col-status { width: 90px; }
+
+  .ticker-table td {
+    padding: 9px 10px;
+    vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Dot cell */
+  td.cell-dot { text-align: center; padding-left: 12px; }
+  .status-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: background .3s;
+    flex-shrink: 0;
+  }
+  .status-dot.ok      { background: var(--green); box-shadow: 0 0 5px #3ddc8455; }
+  .status-dot.fail    { background: var(--red);   box-shadow: 0 0 5px #ff5c5c55; }
+  .status-dot.pending { background: var(--blue);  animation: blink 1s infinite; }
+
+  @keyframes blink {
+    0%,100% { opacity: 1; }
+    50%      { opacity: .3; }
+  }
+
+  td.cell-symbol {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  td.cell-name {
+    font-size: 11px;
+    color: var(--muted);
+  }
+  td.cell-price {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--blue);
+    text-align: right;
+    padding-right: 14px;
+  }
+  td.cell-status {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    text-align: right;
+    padding-right: 14px;
+  }
+  td.cell-status.ok   { color: var(--green); }
+  td.cell-status.fail { color: var(--red);   }
+  td.cell-status.wait { color: var(--muted); }
+
+  /* replacement badge */
+  .badge-new {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    background: #1a2a1a;
+    border: 1px solid #2a4a2a;
+    color: var(--green);
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-left: 5px;
+    vertical-align: middle;
+    letter-spacing: 0.3px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>KEYN DIAGNOSTIC</h1>
+  <span>Ticker Symbol Test</span>
+</header>
+<p class="subtitle">// Tests all configured symbols against localhost:5000/api/quotes</p>
+
+<div class="controls">
+  <button id="run-btn">▶ RUN ALL TESTS</button>
+  <button id="copy-btn" style="display:none">⎘ Copy Failures</button>
+  <div class="summary-pills">
+    <span class="pill total"   id="pill-total"></span>
+    <span class="pill ok"      id="pill-ok"></span>
+    <span class="pill fail"    id="pill-fail"></span>
+    <span class="pill pending" id="pill-pending"></span>
+  </div>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-bar" id="progress"></div>
+</div>
+
+<div id="regions-container"></div>
+
+<script>
+// ── All regions — updated symbols applied ──────────────────────────────────
+const REGIONS = {
+  us: {
+    label: "United States",
+    tickers: [
+      { symbol: "^GSPC",  name: "SPX"  },
+      { symbol: "^DJI",   name: "DJIA" },
+      { symbol: "^IXIC",  name: "COMP" },
+      { symbol: "^RUT",   name: "RUT"  },
+      { symbol: "^NYA",   name: "NYSE" },
+      { symbol: "^VIX",   name: "VIX"  },
+      { symbol: "^TNX",   name: "10Y"  },
+      { symbol: "^TYX",   name: "30Y"  },
+      { symbol: "^MOVE",  name: "MOVE" },
+      { symbol: "^SKEW",  name: "SKEW" },
+    ],
+  },
+  ca: {
+    label: "Canada",
+    tickers: [
+      { symbol: "^GSPTSE",  name: "TSX"    },
+      { symbol: "TX60.TS",  name: "TSX60",  isNew: true },  // was ^TXSI
+      { symbol: "^SPCDNX",  name: "TSX-V",  isNew: true },  // was ^JX
+      { symbol: "^GSPC",    name: "SPX"    },
+      { symbol: "^TNX",     name: "US10Y"  },
+      { symbol: "CADUSD=X", name: "CAD"    },
+      { symbol: "^VIX",     name: "VIX"    },
+      { symbol: "^GVZ",     name: "GLDVOL" },
+      { symbol: "^OVX",     name: "OILVOL" },
+      { symbol: "^SPGSCI",  name: "CMDTY"  },
+    ],
+  },
+  eu: {
+    label: "European Union",
+    tickers: [
+      { symbol: "^GDAXI",    name: "DAX"    },
+      { symbol: "^FCHI",     name: "CAC40"  },
+      { symbol: "^STOXX50E", name: "EU50"   },
+      { symbol: "^STOXX",    name: "STX600" },
+      { symbol: "^IBEX",     name: "IBEX"   },
+      { symbol: "^AEX",      name: "AEX"    },
+      { symbol: "FTSEMIB.MI",name: "MIB",    isNew: true }, // was ^FTMIB
+      { symbol: "^BFX",      name: "BEL20"  },
+      { symbol: "^ATX",      name: "ATX"    },
+      { symbol: "EURUSD=X",  name: "EUR"    },
+    ],
+  },
+  cn: {
+    label: "China",
+    tickers: [
+      { symbol: "000001.SS", name: "SSE",    isNew: true }, // was ^SSEC
+      { symbol: "399001.SZ", name: "SZSE",   isNew: true }, // was ^SZSC
+      { symbol: "^HSI",      name: "HSI"    },
+      { symbol: "^HSCE",     name: "HSCE"   },
+      { symbol: "000300.SS", name: "CSI300", isNew: true }, // was ^CSI300
+      { symbol: "^STI",      name: "SGX"    },
+      { symbol: "^TWII",     name: "TWSE"   },
+      { symbol: "^KS11",     name: "KOSPI"  },
+      { symbol: "^N225",     name: "N225"   },
+      { symbol: "CNYUSD=X",  name: "CNY"    },
+    ],
+  },
+  globe_am: {
+    label: "Americas",
+    tickers: [
+      { symbol: "^GSPC",     name: "SPX"    },
+      { symbol: "^BVSP",     name: "BVSP"   },
+      { symbol: "^MXX",      name: "IPC"    },
+      { symbol: "^MERV",     name: "MERV"   },
+      { symbol: "^IPSA",     name: "IPSA"   },
+      { symbol: "^SPCOSLCP", name: "COLCAP", isNew: true }, // was ^IGBC
+      { symbol: "^SPBLPGPT", name: "LIMA",   isNew: true }, // was ^SPBL25P
+      { symbol: "^GSPTSE",   name: "TSX"    },
+      { symbol: "^NYA",      name: "NYSE"   },
+      { symbol: "^RUT",      name: "RUT"    },
+    ],
+  },
+  globe_eu: {
+    label: "Europe & Africa",
+    tickers: [
+      { symbol: "^FTSE",     name: "FTSE"  },
+      { symbol: "^GDAXI",    name: "DAX"   },
+      { symbol: "^FCHI",     name: "CAC40" },
+      { symbol: "^SSMI",     name: "SMI"   },
+      { symbol: "^AEX",      name: "AEX"   },
+      { symbol: "^IBEX",     name: "IBEX"  },
+      { symbol: "FTSEMIB.MI",name: "MIB",   isNew: true }, // was ^FTMIB
+      { symbol: "^OMX",      name: "OMX"   },
+      { symbol: "^JN0U.JO",  name: "JSE",   isNew: true }, // was ^J203
+      { symbol: "^CASE30",   name: "EGX30", isNew: true }, // was ^EGX30
+    ],
+  },
+  globe_as: {
+    label: "Asia",
+    tickers: [
+      { symbol: "^N225",  name: "N225"   },
+      { symbol: "^HSI",   name: "HSI"    },
+      { symbol: "^KS11",  name: "KOSPI"  },
+      { symbol: "^AXJO",  name: "ASX"    },
+      { symbol: "^BSESN", name: "SENSEX" },
+      { symbol: "^NSEI",  name: "NIFTY"  },
+      { symbol: "^STI",   name: "SGX"    },
+      { symbol: "^TWII",  name: "TWSE"   },
+      { symbol: "^KLSE",  name: "KLCI"   },
+      { symbol: "^SET",   name: "SET"    },
+    ],
+  },
+};
+
+// ── State ──────────────────────────────────────────────────────────────────
+const symState = {}; // symbol → { status, price, error, entries: [{regionKey, rowIndex}] }
+const domRefs  = {}; // `${regionKey}|${rowIndex}` → { dot, cellPrice, cellStatus }
+
+function safeId(s) { return s.replace(/[^a-zA-Z0-9]/g, '_'); }
+
+function buildUI() {
+  const container = document.getElementById('regions-container');
+  container.innerHTML = '';
+
+  for (const [key, region] of Object.entries(REGIONS)) {
+    const block = document.createElement('div');
+    block.className = 'region-block';
+
+    const header = document.createElement('div');
+    header.className = 'region-header';
+    header.innerHTML = `
+      <span class="region-key">${key}</span>
+      <span class="region-label">${region.label}</span>
+      <span class="region-count">${region.tickers.length} tickers</span>
+    `;
+    block.appendChild(header);
+
+    const table = document.createElement('table');
+    table.className = 'ticker-table';
+    const tbody = document.createElement('tbody');
+
+    region.tickers.forEach((t, rowIndex) => {
+      const sym = t.symbol;
+      if (!symState[sym]) {
+        symState[sym] = { status: 'idle', price: null, error: null, entries: [] };
+      }
+      symState[sym].entries.push({ regionKey: key, rowIndex });
+
+      const refKey = `${key}|${rowIndex}`;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="cell-dot col-dot">
+          <span class="status-dot" id="dot-${safeId(refKey)}"></span>
+        </td>
+        <td class="cell-symbol col-symbol">
+          ${sym}${t.isNew ? '<span class="badge-new">NEW</span>' : ''}
+        </td>
+        <td class="cell-name col-name">${t.name}</td>
+        <td class="cell-price col-price" id="prc-${safeId(refKey)}"></td>
+        <td class="cell-status wait col-status" id="res-${safeId(refKey)}">—</td>
+      `;
+      tbody.appendChild(tr);
+
+      domRefs[refKey] = {
+        dot:        tr.querySelector(`#dot-${safeId(refKey)}`),
+        cellPrice:  tr.querySelector(`#prc-${safeId(refKey)}`),
+        cellStatus: tr.querySelector(`#res-${safeId(refKey)}`),
+      };
+    });
+
+    table.appendChild(tbody);
+    block.appendChild(table);
+    container.appendChild(block);
+  }
+}
+
+function updatePills() {
+  const vals    = Object.values(symState);
+  const total   = vals.length;
+  const ok      = vals.filter(s => s.status === 'ok').length;
+  const fail    = vals.filter(s => s.status === 'fail').length;
+  const pending = vals.filter(s => s.status === 'pending').length;
+
+  document.getElementById('pill-total').textContent   = `${total} symbols`;
+  document.getElementById('pill-ok').textContent      = `${ok} ok`;
+  document.getElementById('pill-fail').textContent    = `${fail} failed`;
+  document.getElementById('pill-pending').textContent = `${pending} pending`;
+
+  const pct = total > 0 ? ((ok + fail) / total) * 100 : 0;
+  document.getElementById('progress').style.width = pct + '%';
+}
+
+function applyStatus(sym, status, price) {
+  symState[sym].status = status;
+  symState[sym].price  = price;
+
+  for (const { regionKey, rowIndex } of symState[sym].entries) {
+    const refs = domRefs[`${regionKey}|${rowIndex}`];
+    if (!refs) continue;
+
+    refs.dot.className = `status-dot ${status}`;
+
+    if (status === 'ok') {
+      refs.cellStatus.className   = 'cell-status col-status ok';
+      refs.cellStatus.textContent = '✓ OK';
+      refs.cellPrice.textContent  = price != null
+        ? price.toLocaleString(undefined, { maximumFractionDigits: 2 })
+        : '';
+    } else if (status === 'fail') {
+      refs.cellStatus.className   = 'cell-status col-status fail';
+      refs.cellStatus.textContent = '✗ NO DATA';
+      refs.cellPrice.textContent  = '';
+    } else if (status === 'pending') {
+      refs.cellStatus.className   = 'cell-status col-status wait';
+      refs.cellStatus.textContent = '…';
+      refs.cellPrice.textContent  = '';
+    }
+  }
+  updatePills();
+}
+
+async function runTests() {
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true;
+  document.getElementById('copy-btn').style.display = 'none';
+  document.getElementById('progress').style.width = '0%';
+
+  for (const sym of Object.keys(symState)) applyStatus(sym, 'pending', null);
+
+  const allSymbols = Object.keys(symState);
+  const BATCH = 5;
+
+  for (let i = 0; i < allSymbols.length; i += BATCH) {
+    const batch = allSymbols.slice(i, i + BATCH);
+    const url   = `/api/quotes?symbols=${batch.map(encodeURIComponent).join(',')}`;
+
+    try {
+      const res  = await fetch(url);
+      const data = await res.json();
+      for (const sym of batch) {
+        const q = data[sym];
+        if (q && q.price != null && !q.error) {
+          applyStatus(sym, 'ok', q.price);
+        } else {
+          applyStatus(sym, 'fail', null);
+        }
+      }
+    } catch {
+      for (const sym of batch) applyStatus(sym, 'fail', null);
+    }
+
+    await new Promise(r => setTimeout(r, 150));
+  }
+
+  btn.disabled = false;
+  document.getElementById('copy-btn').style.display = '';
+}
+
+document.getElementById('copy-btn').addEventListener('click', () => {
+  const lines = ['FAILED SYMBOLS\n' + '─'.repeat(44)];
+  for (const [key, region] of Object.entries(REGIONS)) {
+    const fails = region.tickers.filter(t => symState[t.symbol]?.status === 'fail');
+    if (!fails.length) continue;
+    lines.push(`\n[${key}] ${region.label}`);
+    for (const t of fails) lines.push(`  ✗  ${t.symbol.padEnd(16)} (${t.name})`);
+  }
+  navigator.clipboard.writeText(lines.join('\n')).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => btn.textContent = '⎘ Copy Failures', 2000);
+  });
+});
+
+buildUI();
+updatePills();
+document.getElementById('run-btn').addEventListener('click', runTests);
+</script>
+</body>
+</html>

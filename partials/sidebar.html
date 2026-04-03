@@ -1,0 +1,85 @@
+<!--
+  KEYN Sidebar — Reference Template
+  This file documents the sidebar structure.
+  The actual sidebar is injected by partials/keyn-partials.js.
+  Call: KEYN.initPage('dashboard')  ← pass the active page id
+  Valid ids: dashboard | portfolio | laboratory | timemachine | shortlists | community | settings
+-->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <img src="content/Keyn-Logo.png" alt="Keyn" class="logo-img" />
+  </div>
+  <nav class="nav" id="main-nav">
+
+    <div class="nav-item active" data-href="home.html">
+      <div class="active-indicator"></div>
+      <img class="nav-icon"
+           src="svg/Dashboard Active.svg"
+           data-active="svg/Dashboard Active.svg"
+           data-inactive="svg/Dashboard Inactive.svg"
+           alt="Dashboard" />
+      <span class="nav-label">Dashboard</span>
+    </div>
+
+    <div class="nav-item" data-href="portfolio.html">
+      <div class="active-indicator"></div>
+      <img class="nav-icon"
+           src="svg/Portfolio Inactive.svg"
+           data-active="svg/Portfolio Active.svg"
+           data-inactive="svg/Portfolio Inactive.svg"
+           alt="Portfolio" />
+      <span class="nav-label">Portfolio</span>
+    </div>
+
+    <div class="nav-item">
+      <div class="active-indicator"></div>
+      <img class="nav-icon"
+           src="svg/Laboratory Inactive.svg"
+           data-active="svg/Laboratory Active.svg"
+           data-inactive="svg/Laboratory Inactive.svg"
+           alt="Laboratory" />
+      <span class="nav-label">Laboratory</span>
+    </div>
+
+    <div class="nav-item">
+      <div class="active-indicator"></div>
+      <img class="nav-icon"
+           src="svg/Time Machine Inactive.svg"
+           data-active="svg/Time Machine Active.svg"
+           data-inactive="svg/Time Machine Inactive.svg"
+           alt="Time Machine" />
+      <span class="nav-label">Time Machine</span>
+    </div>
+
+    <div class="nav-item">
+      <div class="active-indicator"></div>
+      <img class="nav-icon"
+           src="svg/Shortlists Inactive.svg"
+           data-active="svg/Shortlists Active.svg"
+           data-inactive="svg/Shortlists Inactive.svg"
+           alt="Shortlists" />
+      <span class="nav-label">Shortlists</span>
+    </div>
+
+    <div class="nav-item">
+      <div class="active-indicator"></div>
+      <img class="nav-icon"
+           src="svg/Community Inactive.svg"
+           data-active="svg/Community Active.svg"
+           data-inactive="svg/Community Inactive.svg"
+           alt="Community" />
+      <span class="nav-label">Community</span>
+    </div>
+
+    <div class="nav-item">
+      <div class="active-indicator"></div>
+      <img class="nav-icon"
+           src="svg/Settings Inactive.svg"
+           data-active="svg/Settings Active.svg"
+           data-inactive="svg/Settings Inactive.svg"
+           alt="Settings" />
+      <span class="nav-label">Settings</span>
+    </div>
+
+  </nav>
+</aside>
