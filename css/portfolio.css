@@ -69,6 +69,8 @@ html, body { overflow: hidden; height: 100%; }
   gap: 4px;
   align-items: center;
   margin-top: 4px;
+  flex-shrink: 0;
+  flex-wrap: nowrap;
 }
 
 .pp-tab {
@@ -300,8 +302,8 @@ html, body { overflow: hidden; height: 100%; }
   text-overflow: ellipsis;
 }
 
-.pp-row-nums               { text-align: right; }
-.pp-row-val                { font-size: 15px; font-weight: 700; color: var(--text); }
+.pp-row-nums               { text-align: right; min-width: 80px; flex-shrink: 0; }
+.pp-row-val                { font-size: 15px; font-weight: 700; color: var(--text); white-space: nowrap; }
 .pp-row-pnl                { font-size: 11px; font-weight: 700; margin-top: 2px; white-space: nowrap; }
 .pp-row-pnl.up             { color: var(--green); }
 .pp-row-pnl.dn             { color: var(--red); }
@@ -513,33 +515,39 @@ html, body { overflow: hidden; height: 100%; }
   .pp-total-val { font-size: 40px; }
 }
 
-/* Hide secondary stats as width decreases to prevent overflow */
+/* Hide whole stat cells (not just content) at breakpoints */
 @media (max-width: 1200px) {
-  #stat-invested,
-  #stat-return { display: none; }
-  #stat-invested + .pp-stat-cell,
-  #stat-return  + .pp-stat-cell { border-left: none; }
+  .pp-stat-hide-md { display: none; }
 }
-
 @media (max-width: 960px) {
-  #stat-cash { display: none; }
+  .pp-stat-hide-sm { display: none; }
 }
 
-/* Shrink positions panel proportionally between 1100px and 800px */
+/* Shrink positions panel as screen narrows — chart takes remaining space */
 @media (max-width: 1100px) {
   .pp-positions { width: 360px; }
 }
 @media (max-width: 1000px) {
   .pp-positions { width: 300px; }
+  /* Shrink row value font so price+% always fit */
+  .pp-row-val  { font-size: 13px; }
+  .pp-row-pnl  { font-size: 10px; }
+  .pp-row-nums { min-width: 70px; }
+  /* Shrink tabs so they always fit */
+  .pp-tab      { font-size: 11px; padding: 4px 7px; }
+  .pp-chart-top { padding: 16px 16px 10px; }
+  .pp-total-val { font-size: 34px; }
 }
 @media (max-width: 900px) {
-  .pp-positions { width: 260px; }
+  .pp-positions { width: 240px; }
+  .pp-row-val   { font-size: 12px; }
+  .pp-tab       { font-size: 10px; padding: 3px 5px; }
 }
 
-/* Below 800px — allow horizontal scroll rather than breaking layout */
+/* Below 800px — allow horizontal scroll */
 @media (max-width: 800px) {
   html, body  { overflow: auto; }
-  .pp-content { min-width: 800px; overflow-x: auto; }
+  .pp-content { min-width: 800px; }
 }
 
 @media (max-width: 1024px) {
