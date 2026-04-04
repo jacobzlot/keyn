@@ -1844,7 +1844,7 @@ window.KEYN_DRUM=(function(){
           prices = pPrices;
         }
 
-        return { ticker: p.ticker, shares: sharesLabel, pct, dir, prices, refPrice };
+        return { ticker: p.ticker, shares: sharesLabel, pct, dir, prices, refPrice, currentPrice: p.currentPrice };
       });
     }
 
@@ -1944,7 +1944,7 @@ window.KEYN_DRUM=(function(){
       buildStockRows(currentRange).forEach(s => {
         const row = document.createElement('div');
         row.className = 'sp-row';
-        row.innerHTML = `<div class="sp-info"><span class="sp-ticker">${s.ticker}</span><span class="sp-shares">${s.shares}</span></div><canvas class="sp-canvas"></canvas><span class="sp-pct ${s.dir==='up'?'color-up':'color-dn'}">${s.pct}</span>`;
+        row.innerHTML = `<div class="sp-info"><span class="sp-ticker">${s.ticker}</span><span class="sp-shares">${s.shares}</span></div><canvas class="sp-canvas"></canvas><div class="sp-right"><span class="sp-price">${s.currentPrice ? '$' + s.currentPrice.toFixed(2) : ''}</span><span class="sp-pct ${s.dir==='up'?'color-up':'color-dn'}">${s.pct}</span></div>`;
         listEl.appendChild(row);
         rows.push({ canvas: row.querySelector('canvas'), s });
       });

@@ -441,11 +441,9 @@ function renderList() {
   listEmptyEl.style.display = positions.length ? 'none' : '';
 
   positions.forEach(p => {
-    const cost   = p.avgPrice * p.shares;
-    const mktVal = p.currentPrice * p.shares;
-    const pnl    = mktVal - cost;
-    const pnlPct = cost > 0 ? (pnl / cost) * 100 : 0;
-    const isUp   = pnl >= 0;
+    const pc      = p.prevClose != null ? p.prevClose : (p.currentPrice - (p.change || 0));
+    const dayChg  = pc > 0 ? ((p.currentPrice - pc) / pc) * 100 : 0;
+    const isUp    = dayChg >= 0;
 
     const row = document.createElement('div');
     row.className = 'pp-row';
@@ -460,31 +458,45 @@ function renderList() {
       </div>
       <canvas width="${SW * DPR}" height="${SH * DPR}" style="width:${SW}px;height:${SH}px;display:block;"></canvas>
       <div class="pp-row-nums">
-        <div class="pp-row-val">${fmt$(mktVal)}</div>
-        <div class="pp-row-pnl ${isUp ? 'up' : 'dn'}">${pnl >= 0 ? '+' : ''}${fmt$(pnl)} (${Math.abs(pnlPct).toFixed(2)}%)</div>
+        <div class="pp-row-val">${fmt$(p.currentPrice)}</div>
+        <div class="pp-row-pnl ${isUp ? 'up' : 'dn'}">${isUp ? '+' : ''}${dayChg.toFixed(2)}%</div>
       </div>
     `;
 
     row.addEventListener('click', () => openModal(p.ticker));
 
-    sparkline(row.querySelector('canvas'), p.prices, isUp ? 'up' : 'dn');
+    sparkline(row.querySelector('canvas'), p.prices, isUp ? 'up' : 'dn', pc);
     listEl.appendChild(row);
   });
 }
 
-function sparkline(canvas, prices, dir) {
+function sparkline(canvas, prices, dir, refPrice) {
   const DPR = window.devicePixelRatio || 1;
   const W = canvas.width / DPR, H = canvas.height / DPR;
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   if (!prices || prices.length < 2) return;
-  const n = prices.length;
-  const mn = Math.min(...prices) * 0.98, mx = Math.max(...prices) * 1.02;
-  const color = dir === 'up' ? '#2bff00' : '#ff1a1a';
+  const n   = prices.length;
+  const ref = refPrice != null ? refPrice : prices[0];
+  const last = prices[n - 1];
+  const isUp = last >= ref;
+  const allV = [...prices, ref];
+  const mn = Math.min(...allV), mx = Math.max(...allV);
+  const pad = Math.max((mx - mn) * 0.15, Math.abs(ref) * 0.001, 0.01);
+  const minV = mn - pad, maxV = mx + pad;
+  const color = isUp ? '#2bff00' : '#ff1a1a';
   const fx = i => (i / (n - 1)) * W;
-  const fy = v => H - ((v - mn) / (mx - mn)) * H;
+  const fy = v => H - ((v - minV) / (maxV - minV)) * H;
+
+  // Reference dashed line
+  ctx.save();
+  ctx.setLineDash([2, 4]);
+  ctx.beginPath(); ctx.moveTo(0, fy(ref)); ctx.lineTo(W, fy(ref));
+  ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.restore();
+
   const grad = ctx.createLinearGradient(0, 0, 0, H);
-  grad.addColorStop(0, dir === 'up' ? 'rgba(43,255,0,0.3)' : 'rgba(255,26,26,0.3)');
+  grad.addColorStop(0, isUp ? 'rgba(43,255,0,0.3)' : 'rgba(255,26,26,0.3)');
   grad.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.beginPath(); ctx.moveTo(fx(0), fy(prices[0]));
   for (let i = 1; i < n; i++) {
@@ -499,6 +511,12 @@ function sparkline(canvas, prices, dir) {
     ctx.bezierCurveTo(m, fy(prices[i-1]), m, fy(prices[i]), fx(i), fy(prices[i]));
   }
   ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.stroke();
+
+  // Dark end dot
+  ctx.beginPath(); ctx.arc(fx(n-1), fy(last), 2.5, 0, Math.PI*2);
+  ctx.fillStyle = color; ctx.fill();
+  ctx.beginPath(); ctx.arc(fx(n-1), fy(last), 1.2, 0, Math.PI*2);
+  ctx.fillStyle = '#111'; ctx.fill();
 }
 
 // ── Chart ──────────────────────────────────────────────────────────────────
@@ -560,8 +578,8 @@ async function fetch1D() {
       const pc       = result.meta?.regularMarketPreviousClose || result.meta?.chartPreviousClose;
       const mp       = result.meta?.regularMarketPrice;
 
-      // Take all valid bars — Yahoo naturally returns only the current/last trading day
-      const pairs = rawTS
+      // Take all valid bars including after-hours (like Robinhood)
+      let pairs = rawTS
         .map((ts, i) => ({ ts, price: rawClose[i] }))
         .filter(pt => pt.price != null);
 
@@ -574,10 +592,12 @@ async function fetch1D() {
         })
       );
       if (pc) p.prevClose = pc;
-      if (mp) p.currentPrice = mp;
-      if (pc && mp) {
-        p.change    = Math.round((mp - pc) * 1e4) / 1e4;
-        p.changePct = Math.round((mp - pc) / pc * 100 * 1e4) / 1e4;
+      // Use last bar price — includes after-hours so it's the most current price
+      const lastBarPrice = p.prices[p.prices.length - 1];
+      p.currentPrice = lastBarPrice;
+      if (pc) {
+        p.change    = Math.round((lastBarPrice - pc) * 1e4) / 1e4;
+        p.changePct = Math.round((lastBarPrice - pc) / pc * 100 * 1e4) / 1e4;
       }
       anyUpdated = true;
       console.log(`[KEYN] ${p.ticker} 1D fetched: ${pairs.length} bars, last=$${p.prices[p.prices.length-1]?.toFixed(2)}`);
