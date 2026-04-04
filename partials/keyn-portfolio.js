@@ -473,17 +473,18 @@ function renderList() {
 function sparkline(canvas, prices, dir, refPrice) {
   if (!prices || prices.length < 2) return;
 
-  const DPR  = window.devicePixelRatio || 1;
-  // Read CSS size from the inline style (set by SW/SH above)
+  // Force 3x DPR minimum for crisp rendering regardless of screen
+  const DPR  = Math.max(window.devicePixelRatio || 1, 2);
   const cssW = parseInt(canvas.style.width)  || 150;
   const cssH = parseInt(canvas.style.height) || 56;
 
-  // Set backing store to device pixels, CSS size stays fixed
   canvas.width  = Math.round(cssW * DPR);
   canvas.height = Math.round(cssH * DPR);
 
   const ctx = canvas.getContext('2d');
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
 
   const W = cssW, H = cssH;
   const n    = prices.length;
@@ -502,20 +503,20 @@ function sparkline(canvas, prices, dir, refPrice) {
   const xOf = i => (i / (n - 1)) * W;
   const yOf = v => H - ((v - minV) / (maxV - minV)) * H;
 
-  // Dashed reference line at prevClose
+  // Dashed reference line — off-black matching the chart background
   ctx.save();
-  ctx.setLineDash([2, 4]);
+  ctx.setLineDash([3, 4]);
   ctx.beginPath();
   ctx.moveTo(0, yOf(ref)); ctx.lineTo(W, yOf(ref));
-  ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-  ctx.lineWidth = 1;
+  ctx.strokeStyle = 'rgba(13,19,30,0.75)';
+  ctx.lineWidth = 1.5;
   ctx.stroke();
   ctx.restore();
 
   // Gradient fill
   const grad = ctx.createLinearGradient(0, 0, 0, H);
-  grad.addColorStop(0, isUp ? 'rgba(43,255,0,0.28)'   : 'rgba(255,26,26,0.28)');
-  grad.addColorStop(1, isUp ? 'rgba(43,255,0,0)'      : 'rgba(255,26,26,0)');
+  grad.addColorStop(0, isUp ? 'rgba(43,255,0,0.28)'  : 'rgba(255,26,26,0.28)');
+  grad.addColorStop(1, isUp ? 'rgba(43,255,0,0)'     : 'rgba(255,26,26,0)');
   ctx.beginPath();
   ctx.moveTo(xOf(0), yOf(prices[0]));
   for (let i = 1; i < n; i++) {
@@ -528,7 +529,7 @@ function sparkline(canvas, prices, dir, refPrice) {
   ctx.fillStyle = grad;
   ctx.fill();
 
-  // Price line — crisp, 1.5px
+  // Price line
   ctx.beginPath();
   ctx.moveTo(xOf(0), yOf(prices[0]));
   for (let i = 1; i < n; i++) {
