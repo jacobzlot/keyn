@@ -1925,25 +1925,60 @@ window.KEYN_DRUM=(function(){
       ctx.stroke();
     }
 
-    function buildStocksPanel() {
+    // Cache for sparkline fetches so we don't refetch on every panel open
+    const _sparkCache = {};
+
+    async function buildStocksPanel() {
       listEl.innerHTML = '';
-      const rows = [];
-      buildStockRows(currentRange).forEach(s => {
+      const stockRows = buildStockRows(currentRange);
+
+      // Render rows immediately with structure (no chart yet)
+      const canvasMap = {};
+      stockRows.forEach(s => {
         const row = document.createElement('div');
         row.className = 'sp-row';
         row.innerHTML = `<div class="sp-info"><span class="sp-ticker">${s.ticker}</span><span class="sp-shares">${s.shares}</span></div><canvas class="sp-canvas"></canvas><div class="sp-right"><span class="sp-price">${s.currentPrice ? '$' + s.currentPrice.toFixed(2) : ''}</span><span class="sp-pct ${s.dir==='up'?'color-up':'color-dn'}">${s.pct}</span></div>`;
         listEl.appendChild(row);
-        rows.push({ canvas: row.querySelector('canvas'), s });
+        canvasMap[s.ticker] = { canvas: row.querySelector('canvas'), s };
       });
-      // Draw after all rows are in DOM so offsetWidth is real
+
+      // Fetch 30m interval (gives ~13 clean points for 1D — perfect for sparkline size)
+      await Promise.allSettled(stockRows.map(async s => {
+        try {
+          if (!_sparkCache[s.ticker]) {
+            const resp = await fetch(`/api/chart?symbol=${encodeURIComponent(s.ticker)}&interval=30m&range=1d`);
+            if (!resp.ok) return;
+            const result = (await resp.json())?.chart?.result?.[0];
+            if (!result) return;
+            const rawTS    = result.timestamp || [];
+            const rawClose = result.indicators?.quote?.[0]?.close || [];
+            const pc       = result.meta?.regularMarketPreviousClose;
+            const prices   = rawTS
+              .map((ts, i) => ({ ts, price: rawClose[i] }))
+              .filter(pt => pt.price != null)
+              .map(pt => pt.price);
+            if (prices.length >= 2) _sparkCache[s.ticker] = { prices, prevClose: pc };
+          }
+        } catch(e) {}
+      }));
+
+      // Draw all sparklines now that data is ready
       requestAnimationFrame(() => {
-        rows.forEach(({ canvas, s }) => drawSparkline(canvas, s.prices, s.dir, s.refPrice));
+        stockRows.forEach(s => {
+          const entry = canvasMap[s.ticker];
+          if (!entry) return;
+          const cached = _sparkCache[s.ticker];
+          const prices  = (cached && cached.prices.length >= 2) ? cached.prices : s.prices;
+          const refPrice = (cached && cached.prevClose) ? cached.prevClose : s.refPrice;
+          drawSparkline(entry.canvas, prices, s.dir, refPrice);
+        });
       });
     }
 
-    // Rebuild when chart range changes (even if panel is closed, ready for next open)
+    // Clear sparkline cache when range changes so it refetches
     window.addEventListener('keyn-range-change', e => {
       currentRange = e.detail;
+      Object.keys(_sparkCache).forEach(k => delete _sparkCache[k]);
       if (expanded) buildStocksPanel();
     });
 
