@@ -449,7 +449,7 @@ function renderList() {
     row.className = 'pp-row';
 
     const DPR = window.devicePixelRatio || 1;
-    const SW = 72, SH = 36;
+    const SW = 150, SH = 56;
 
     row.innerHTML = `
       <div class="pp-row-info">
@@ -471,52 +471,74 @@ function renderList() {
 }
 
 function sparkline(canvas, prices, dir, refPrice) {
-  const DPR = window.devicePixelRatio || 1;
-  const W = canvas.width / DPR, H = canvas.height / DPR;
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
   if (!prices || prices.length < 2) return;
-  const n   = prices.length;
-  const ref = refPrice != null ? refPrice : prices[0];
+
+  const DPR  = window.devicePixelRatio || 1;
+  // Read CSS size from the inline style (set by SW/SH above)
+  const cssW = parseInt(canvas.style.width)  || 150;
+  const cssH = parseInt(canvas.style.height) || 56;
+
+  // Set backing store to device pixels, CSS size stays fixed
+  canvas.width  = Math.round(cssW * DPR);
+  canvas.height = Math.round(cssH * DPR);
+
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+  const W = cssW, H = cssH;
+  const n    = prices.length;
+  const ref  = refPrice != null ? refPrice : prices[0];
   const last = prices[n - 1];
   const isUp = last >= ref;
-  const allV = [...prices, ref];
-  const mn = Math.min(...allV), mx = Math.max(...allV);
-  const pad = Math.max((mx - mn) * 0.15, Math.abs(ref) * 0.001, 0.01);
-  const minV = mn - pad, maxV = mx + pad;
-  const color = isUp ? '#2bff00' : '#ff1a1a';
-  const fx = i => (i / (n - 1)) * W;
-  const fy = v => H - ((v - minV) / (maxV - minV)) * H;
 
-  // Reference dashed line
+  const allV = [...prices, ref];
+  const lo   = Math.min(...allV);
+  const hi   = Math.max(...allV);
+  const span = Math.max(hi - lo, Math.abs(ref) * 0.001, 0.01);
+  const pad  = span * 0.2;
+  const minV = lo - pad, maxV = hi + pad;
+
+  const color = isUp ? '#2bff00' : '#ff1a1a';
+  const xOf = i => (i / (n - 1)) * W;
+  const yOf = v => H - ((v - minV) / (maxV - minV)) * H;
+
+  // Dashed reference line at prevClose
   ctx.save();
   ctx.setLineDash([2, 4]);
-  ctx.beginPath(); ctx.moveTo(0, fy(ref)); ctx.lineTo(W, fy(ref));
-  ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(0, yOf(ref)); ctx.lineTo(W, yOf(ref));
+  ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
   ctx.restore();
 
+  // Gradient fill
   const grad = ctx.createLinearGradient(0, 0, 0, H);
-  grad.addColorStop(0, isUp ? 'rgba(43,255,0,0.3)' : 'rgba(255,26,26,0.3)');
-  grad.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.beginPath(); ctx.moveTo(fx(0), fy(prices[0]));
+  grad.addColorStop(0, isUp ? 'rgba(43,255,0,0.28)'   : 'rgba(255,26,26,0.28)');
+  grad.addColorStop(1, isUp ? 'rgba(43,255,0,0)'      : 'rgba(255,26,26,0)');
+  ctx.beginPath();
+  ctx.moveTo(xOf(0), yOf(prices[0]));
   for (let i = 1; i < n; i++) {
-    const m = (fx(i-1)+fx(i))/2;
-    ctx.bezierCurveTo(m, fy(prices[i-1]), m, fy(prices[i]), fx(i), fy(prices[i]));
+    const m = (xOf(i-1) + xOf(i)) / 2;
+    ctx.bezierCurveTo(m, yOf(prices[i-1]), m, yOf(prices[i]), xOf(i), yOf(prices[i]));
   }
-  ctx.lineTo(fx(n-1), H); ctx.lineTo(0, H); ctx.closePath();
-  ctx.fillStyle = grad; ctx.fill();
-  ctx.beginPath(); ctx.moveTo(fx(0), fy(prices[0]));
-  for (let i = 1; i < n; i++) {
-    const m = (fx(i-1)+fx(i))/2;
-    ctx.bezierCurveTo(m, fy(prices[i-1]), m, fy(prices[i]), fx(i), fy(prices[i]));
-  }
-  ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.lineTo(xOf(n - 1), H);
+  ctx.lineTo(0, H);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
 
-  // Dark end dot
-  ctx.beginPath(); ctx.arc(fx(n-1), fy(last), 2.5, 0, Math.PI*2);
-  ctx.fillStyle = color; ctx.fill();
-  ctx.beginPath(); ctx.arc(fx(n-1), fy(last), 1.2, 0, Math.PI*2);
-  ctx.fillStyle = '#111'; ctx.fill();
+  // Price line — crisp, 1.5px
+  ctx.beginPath();
+  ctx.moveTo(xOf(0), yOf(prices[0]));
+  for (let i = 1; i < n; i++) {
+    const m = (xOf(i-1) + xOf(i)) / 2;
+    ctx.bezierCurveTo(m, yOf(prices[i-1]), m, yOf(prices[i]), xOf(i), yOf(prices[i]));
+  }
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
 }
 
 // ── Chart ──────────────────────────────────────────────────────────────────
