@@ -1803,7 +1803,7 @@ window.KEYN_DRUM=(function(){
     function buildStockRows(range) {
       if (!_positions.length) return DEMO_STOCKS;
       return _positions.map(p => {
-        let pct, dir, prices;
+        let pct, dir, prices, refPrice = null;
         const sharesLabel = p.shares >= 1000
           ? (p.shares / 1000).toFixed(1).replace(/\.0$/, '') + 'K shares'
           : p.shares + ' shares';
@@ -1822,12 +1822,16 @@ window.KEYN_DRUM=(function(){
             pct    = (pctVal >= 0 ? '+' : '') + pctVal.toFixed(2) + '%';
             dir    = pctVal >= 0 ? 'up' : 'dn';
             prices = freshPrices;
+            refPrice = prevClose;
           } else {
-            // Fall back to stored changePct
-            const pct1D = p.changePct != null ? p.changePct : ((p.currentPrice - p.avgPrice) / p.avgPrice) * 100;
+            // Fall back to stored changePct — use prevClose for direction too
+            const prevClose = p.prevClose != null ? p.prevClose : (p.currentPrice - (p.change || 0));
+            const lastPrice = (p.prices && p.prices.length) ? p.prices[p.prices.length - 1] : p.currentPrice;
+            const pct1D    = prevClose > 0 ? ((lastPrice - prevClose) / prevClose) * 100 : (p.changePct || 0);
             pct    = (pct1D >= 0 ? '+' : '') + pct1D.toFixed(2) + '%';
             dir    = pct1D >= 0 ? 'up' : 'dn';
             prices = p.prices || [];
+            refPrice = prevClose;
           }
         } else {
           // Other range: use fetched per-position prices
@@ -1840,7 +1844,7 @@ window.KEYN_DRUM=(function(){
           prices = pPrices;
         }
 
-        return { ticker: p.ticker, shares: sharesLabel, pct, dir, prices };
+        return { ticker: p.ticker, shares: sharesLabel, pct, dir, prices, refPrice };
       });
     }
 
@@ -1853,12 +1857,11 @@ window.KEYN_DRUM=(function(){
     let expanded   = false;
     let currentRange = '1D';
 
-    function drawSparkline(canvas, prices, dir) {
+    function drawSparkline(canvas, prices, dir, refPrice) {
       if (!prices || prices.length < 2) return;
       const DPR  = window.devicePixelRatio || 1;
-      const W    = 110, H = 40; // logical CSS pixels
+      const W    = 110, H = 40;
 
-      // Set pixel buffer to match CSS size exactly
       canvas.width  = W * DPR;
       canvas.height = H * DPR;
       canvas.style.width  = W + 'px';
@@ -1868,28 +1871,41 @@ window.KEYN_DRUM=(function(){
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.scale(DPR, DPR);
 
-      const n   = prices.length;
-      const lo  = Math.min(...prices);
-      const hi  = Math.max(...prices);
-      const pad = (hi - lo) * 0.1 || 0.01;
+      const n    = prices.length;
+      const ref  = refPrice != null ? refPrice : prices[0];
+      const last = prices[n - 1];
+      const isUp = last >= ref;
+
+      // Include ref in Y range so reference line is always visible
+      const allV = [...prices, ref];
+      const lo   = Math.min(...allV);
+      const hi   = Math.max(...allV);
+      const pad  = (hi - lo) * 0.15 || 0.01;
       const minV = lo - pad, maxV = hi + pad;
 
       const xOf = i => (i / (n - 1)) * W;
       const yOf = v => H - ((v - minV) / (maxV - minV)) * H;
 
-      const lineColor = dir === 'up' ? '#189400' : dir === 'dn' ? '#ff1a1a' : '#aaa';
+      const lineColor = isUp ? '#189400' : '#ff1a1a';
+
+      // Dashed reference line at prevClose
+      ctx.save();
+      ctx.setLineDash([2, 3]);
+      ctx.beginPath();
+      ctx.moveTo(0, yOf(ref)); ctx.lineTo(W, yOf(ref));
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.restore();
 
       // Gradient fill
       const grad = ctx.createLinearGradient(0, 0, 0, H);
-      if (dir === 'up') {
+      if (isUp) {
         grad.addColorStop(0, 'rgba(24,148,0,0.25)');
         grad.addColorStop(1, 'rgba(24,148,0,0)');
-      } else if (dir === 'dn') {
+      } else {
         grad.addColorStop(0, 'rgba(255,26,26,0.25)');
         grad.addColorStop(1, 'rgba(255,26,26,0)');
-      } else {
-        grad.addColorStop(0, 'rgba(170,170,170,0.2)');
-        grad.addColorStop(1, 'rgba(170,170,170,0)');
       }
       ctx.beginPath();
       ctx.moveTo(xOf(0), yOf(prices[0]));
@@ -1900,7 +1916,7 @@ window.KEYN_DRUM=(function(){
       ctx.fillStyle = grad;
       ctx.fill();
 
-      // Crisp line — straight segments, 1px
+      // Line
       ctx.beginPath();
       ctx.moveTo(xOf(0), yOf(prices[0]));
       for (let i = 1; i < n; i++) ctx.lineTo(xOf(i), yOf(prices[i]));
@@ -1918,7 +1934,7 @@ window.KEYN_DRUM=(function(){
         const DPR = window.devicePixelRatio || 1;
         row.innerHTML = `<div class="sp-info"><span class="sp-ticker">${s.ticker}</span><span class="sp-shares">${s.shares}</span></div><canvas class="sp-canvas"></canvas><span class="sp-pct ${s.dir==='up'?'color-up':'color-dn'}">${s.pct}</span>`;
         listEl.appendChild(row);
-        drawSparkline(row.querySelector('canvas'), s.prices, s.dir);
+        drawSparkline(row.querySelector('canvas'), s.prices, s.dir, s.refPrice);
       });
     }
 
