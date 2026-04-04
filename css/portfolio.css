@@ -505,25 +505,17 @@ html, body { overflow: hidden; height: 100%; }
 }
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
+/* Positions panel always stays on the right — never wraps below the chart */
+.pp-content {
+  flex-wrap: nowrap;  /* prevent wrapping at any width */
+}
+
+.pp-chart-section {
+  min-width: 320px; /* chart never collapses to nothing */
+}
+
 @media (max-width: 1400px) {
   html, body { overflow: auto; }
-
-  .pp-content {
-    flex-direction: column;
-    overflow: visible;
-    height: auto;
-  }
-
-  .pp-positions {
-    width: 100%;
-    height: 480px;
-  }
-
-  .pp-chart-section {
-    height: 520px;
-    flex-shrink: 0;
-  }
-
   .pp-total-val { font-size: 40px; }
 }
 
