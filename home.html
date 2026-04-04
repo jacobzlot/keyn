@@ -6,7 +6,12 @@
 <title>KEYN – Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Zain:wght@200;300;400;700;800;900&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="css/keyn-dashboard.css" />
-<script src="config.js"></script>
+<script>
+// Inline config — replaces config.js which is gitignored
+window.KEYN_CONFIG = {
+  RSS2JSON_KEY: "tfmbu25mybher9t6dwwdwy9qeukrbth57wcudiqi"
+};
+</script>
 <script src="yahoo.js"></script>
 </head>
 <body>
@@ -1588,7 +1593,7 @@ window.KEYN_DRUM=(function(){
 
     function drawChart(hoverIdx = null) {
       const wrap = canvas.parentElement;
-      const W = wrap.clientWidth, H = wrap.clientHeight;
+      const W = wrap.offsetWidth, H = wrap.offsetHeight;
       if (!W || !H) return;
 
       canvas.width  = W * devicePixelRatio;
@@ -1760,6 +1765,16 @@ window.KEYN_DRUM=(function(){
     }));
 
     window.addEventListener('resize', () => { if (_portVals.length) drawChart(); });
+
+    // ResizeObserver fires as soon as the container has real layout dimensions
+    const _portRO = new ResizeObserver(entries => {
+      for (const e of entries) {
+        if (e.contentRect.width > 0 && e.contentRect.height > 0) {
+          drawChart();
+        }
+      }
+    });
+    _portRO.observe(canvas.parentElement);
 
     // Bootstrap: fetch 1D data immediately
     fetchAndDraw('1D');
