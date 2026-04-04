@@ -7,9 +7,9 @@ html, body { overflow: hidden; height: 100%; }
 /* ── Page layout ─────────────────────────────────────────────────────────── */
 .pp-content {
   flex: 1;
-  display: flex !important;
-  flex-direction: row !important;
-  flex-wrap: nowrap !important;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
   gap: 16px;
   padding: 0 16px 16px;
   min-height: 0;
@@ -18,8 +18,8 @@ html, body { overflow: hidden; height: 100%; }
 
 /* ── Chart section ───────────────────────────────────────────────────────── */
 .pp-chart-section {
-  flex: 1 1 0 !important;
-  min-width: 300px !important;
+  flex: 1 1 0;
+  min-width: 300px;
   max-height: 80%;
   background: var(--panel);
   border-radius: 12px;
@@ -193,9 +193,9 @@ html, body { overflow: hidden; height: 100%; }
 
 /* ── Positions panel ─────────────────────────────────────────────────────── */
 .pp-positions {
-  width: 420px !important;
-  flex-shrink: 0 !important;
-  flex-grow: 0 !important;
+  width: 420px;
+  flex-shrink: 0;
+  flex-grow: 0;
   background: var(--panel);
   border-radius: 12px;
   display: flex;
@@ -511,6 +511,35 @@ html, body { overflow: hidden; height: 100%; }
 @media (max-width: 1400px) {
   html, body { overflow: auto; }
   .pp-total-val { font-size: 40px; }
+}
+
+/* Hide secondary stats as width decreases to prevent overflow */
+@media (max-width: 1200px) {
+  #stat-invested,
+  #stat-return { display: none; }
+  #stat-invested + .pp-stat-cell,
+  #stat-return  + .pp-stat-cell { border-left: none; }
+}
+
+@media (max-width: 960px) {
+  #stat-cash { display: none; }
+}
+
+/* Shrink positions panel proportionally between 1100px and 800px */
+@media (max-width: 1100px) {
+  .pp-positions { width: 360px; }
+}
+@media (max-width: 1000px) {
+  .pp-positions { width: 300px; }
+}
+@media (max-width: 900px) {
+  .pp-positions { width: 260px; }
+}
+
+/* Below 800px — allow horizontal scroll rather than breaking layout */
+@media (max-width: 800px) {
+  html, body  { overflow: auto; }
+  .pp-content { min-width: 800px; overflow-x: auto; }
 }
 
 @media (max-width: 1024px) {
