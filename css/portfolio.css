@@ -191,7 +191,7 @@ html, body { overflow: hidden; height: 100%; }
 
 /* ── Positions panel ─────────────────────────────────────────────────────── */
 .pp-positions {
-  width: 340px;
+  width: 420px;
   flex-shrink: 0;
   background: var(--panel);
   border-radius: 12px;
