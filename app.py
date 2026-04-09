@@ -229,9 +229,23 @@ def api_screener():
         url  = (f"{YAHOO_BASE}/v1/finance/screener/predefined/saved"
                 f"?scrIds={scr_id}&count={count}"
                 f"&fields=symbol,shortName,regularMarketPrice,regularMarketChange,regularMarketChangePercent")
-        resp = requests.get(url, headers=YAHOO_HEADERS, timeout=8)
+        resp = requests.get(url, headers=YAHOO_HEADERS, timeout=10)
         resp.raise_for_status()
-        return jsonify(resp.json())
+        data = resp.json()
+        # Validate the response has usable quotes before returning
+        quotes = (data.get("finance", {}).get("result") or [{}])[0].get("quotes", [])
+        if not quotes:
+            # Try alternate Yahoo screener endpoint as fallback
+            url2 = (f"{YAHOO_BASE}/v1/finance/screener"
+                    f"?scrIds={scr_id}&count={count}"
+                    f"&fields=symbol,shortName,regularMarketPrice,regularMarketChange,regularMarketChangePercent")
+            resp2 = requests.get(url2, headers=YAHOO_HEADERS, timeout=10)
+            if resp2.ok:
+                data2 = resp2.json()
+                quotes2 = (data2.get("finance", {}).get("result") or [{}])[0].get("quotes", [])
+                if quotes2:
+                    return jsonify(data2)
+        return jsonify(data)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

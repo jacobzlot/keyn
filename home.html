@@ -1051,23 +1051,19 @@ window.KEYN_DRUM=(function(){
       renderItem(0);
     }
 
+    // ── Persistent cache — survives failed refreshes so the card is never empty ─
+    const CACHE = { risers: null, fallers: null, ipos: null };
+
     // ── Live data fetchers ────────────────────────────────────────────────────
 
     async function fetchScreener(scrId) {
-      const IS_LOCAL = ['localhost','127.0.0.1'].includes(location.hostname);
-      const YH = 'https://query1.finance.yahoo.com';
-      const CP = 'https://corsproxy.io/?';
-      const path = `/v1/finance/screener/predefined/saved`;
-      // Fetch 10 so we have fallbacks if any charts are unavailable
-      const qs   = `scrIds=${scrId}&count=10&fields=symbol,shortName,regularMarketPrice,regularMarketChange,regularMarketChangePercent`;
-      const target = `${YH}${path}?${qs}`;
-      const url = IS_LOCAL
-        ? `${CP}${encodeURIComponent(target)}`
-        : `/api/yahoo?path=${encodeURIComponent(path)}&${qs}`;
+      // Always route through the Flask backend — it handles CORS and auth.
+      const url = `/api/screener?id=${scrId}&count=10`;
       const res = await fetch(url);
       if (!res.ok) throw new Error(`Screener HTTP ${res.status}`);
       const data = await res.json();
       const quotes = data?.finance?.result?.[0]?.quotes || [];
+      if (!quotes.length) throw new Error('Screener returned 0 quotes');
       return quotes.map(q => ({
         symbol: q.symbol, name: q.shortName || q.symbol,
         price: q.regularMarketPrice, change: q.regularMarketChange,
@@ -1078,19 +1074,13 @@ window.KEYN_DRUM=(function(){
     async function fetchIPOs() {
       // Fetch up to 3 months of PRICED IPOs to build a large candidate pool.
       // Upcoming IPOs never have Yahoo chart data, so we skip them entirely.
-      const IS_LOCAL = ['localhost','127.0.0.1'].includes(location.hostname);
-      const CP = 'https://corsproxy.io/?';
       const allRows = [];
       const now = new Date();
       for (let m = 0; m < 3; m++) {
         try {
           const d = new Date(now.getFullYear(), now.getMonth() - m, 1);
           const monthStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-          const target = `https://api.nasdaq.com/api/ipo/calendar?date=${monthStr}`;
-          const url = IS_LOCAL
-            ? `${CP}${encodeURIComponent(target)}`
-            : `/api/ipos?month=${monthStr}`;
-          const res = await fetch(url);
+          const res = await fetch(`/api/ipos?month=${monthStr}`);
           if (!res.ok) continue;
           const data = await res.json();
           // Priced only — these are already trading and have Yahoo chart history
@@ -1125,35 +1115,61 @@ window.KEYN_DRUM=(function(){
         }
 
         // Walk candidates until we have 4 valid chart slots filled
-        let slot = 0;
-        for (let i = 0; i < candidates.length && slot < 4; i++) {
+        const freshSlots = [];
+        for (let i = 0; i < candidates.length && freshSlots.length < 4; i++) {
           if (i > 0) await delay(350);
-          const { symbol, screener } = candidates[i];
+          const { symbol } = candidates[i];
           try {
             const live = await window.KeynYahoo.fetchYahooChart(symbol, '5m', '1d');
             if (!isValidChart(live)) {
               console.warn(`[KEYN movers] ${symbol} skipped — only ${live?.prices?.length ?? 0} candles`);
-              continue; // try next candidate for this slot
+              continue;
             }
             const isUp = live.currentPrice >= live.open;
-            LIVE[cat][slot] = {
+            freshSlots.push({
               name:   symbol,
               prices: live.prices,
               times:  live.times,
               open:   live.open,
               dir:    isUp ? 'up' : 'dn',
-            };
-            if (activeCat === cat && activeItemIndex === slot) renderItem(slot);
-            slot++;
+            });
           } catch(e) {
             console.warn(`[KEYN movers] ${symbol} skipped — ${e.message}`);
-            // continue to next candidate
           }
         }
+
+        if (freshSlots.length > 0) {
+          // We got at least some live data — fill slots and persist to cache
+          for (let slot = 0; slot < 4; slot++) {
+            if (freshSlots[slot]) LIVE[cat][slot] = freshSlots[slot];
+            else if (CACHE[cat]?.[slot]) LIVE[cat][slot] = CACHE[cat][slot]; // pad with cached
+          }
+          CACHE[cat] = [...LIVE[cat]]; // update cache with best available data
+        } else if (CACHE[cat]) {
+          // Fresh fetch yielded nothing — restore from cache so card stays populated
+          console.warn(`[KEYN movers] ${cat} fetch empty — restoring from cache`);
+          LIVE[cat] = [...CACHE[cat]];
+        }
+        // else: first load, no cache yet — placeholders remain (expected on cold start)
+
+        if (activeCat === cat) renderItem(activeItemIndex);
+
       } catch(e) {
         console.warn(`[KEYN movers] ${cat} load failed:`, e.message);
+        // On total failure restore from cache if available
+        if (CACHE[cat]) {
+          LIVE[cat] = [...CACHE[cat]];
+          if (activeCat === cat) renderItem(activeItemIndex);
+        }
       }
     }
+
+    // ── Hourly refresh — re-fetches all categories every 60 minutes ───────────
+    setInterval(() => {
+      loadCategoryLive('risers');
+      delay(2000).then(() => loadCategoryLive('fallers'));
+      delay(4000).then(() => loadCategoryLive('ipos'));
+    }, 60 * 60 * 1000);
 
     // ── Event wiring ──────────────────────────────────────────────────────────
 
