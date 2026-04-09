@@ -65,7 +65,7 @@
           <div class="search-spacer"></div>
           <div class="search-container" id="search-container">
             <div class="search-input-row">
-              <img class="search-icon" src="svg/search.svg" alt="search" />
+              <img class="search-icon" src="svg/Search.svg" alt="search" />
               <input class="search-input"
                      id="search-input"
                      type="text"

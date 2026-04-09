@@ -718,12 +718,16 @@ window.KEYN_DRUM=(function(){
 
       switchCategory('metals');
 
-      // Pre-fetch all other commodity categories in the background so they're
-      // ready instantly when the user clicks the tab — no load wait.
-      Promise.resolve()
-        .then(() => delay(800).then(() => prefetchCategory('energy')))
-        .then(() => delay(800).then(() => prefetchCategory('agri')))
-        .then(() => delay(800).then(() => prefetchCategory('crypto')));
+      // Pre-fetch remaining categories in parallel after page settles.
+      // 10s delay avoids competing with partials/ticker/movers on initial load.
+      // All three fire simultaneously (not chained) so delays don't stack.
+      setTimeout(() => {
+        Promise.all([
+          prefetchCategory('energy'),
+          prefetchCategory('agri'),
+          prefetchCategory('crypto'),
+        ]);
+      }, 10000);
     });
   })();
 
@@ -1058,9 +1062,6 @@ window.KEYN_DRUM=(function(){
       renderItem(0);
     }
 
-    // ── Persistent cache — survives failed refreshes so the card is never empty ─
-    const CACHE = { risers: null, fallers: null, ipos: null };
-
     // ── Live data fetchers ────────────────────────────────────────────────────
 
     async function fetchScreener(scrId) {
@@ -1078,15 +1079,19 @@ window.KEYN_DRUM=(function(){
     }
 
     async function fetchIPOs() {
+      // Fetch up to 3 months of PRICED IPOs to build a large candidate pool.
+      // Upcoming IPOs never have Yahoo chart data, so we skip them entirely.
       const allRows = [];
       const now = new Date();
       for (let m = 0; m < 3; m++) {
         try {
           const d = new Date(now.getFullYear(), now.getMonth() - m, 1);
           const monthStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-          const res = await fetch(`/api/ipos?month=${monthStr}`);
+          const url = `/api/ipos?month=${monthStr}`;
+          const res = await fetch(url);
           if (!res.ok) continue;
           const data = await res.json();
+          // Priced only — these are already trading and have Yahoo chart history
           const priced = data?.data?.priced?.rows || [];
           allRows.push(...priced);
         } catch(e) { /* skip month on error */ }
@@ -1096,6 +1101,9 @@ window.KEYN_DRUM=(function(){
         .filter(r => r.symbol && r.symbol !== 'N/A' && r.symbol.length > 0 && /^[A-Z]/.test(r.symbol))
         .sort((a,b) => new Date(b.date) - new Date(a.date));
     }
+
+    // Persistent cache: survives failed refreshes so the card is never empty
+    const CACHE = { risers: null, fallers: null, ipos: null };
 
     // Checks whether a chart result has enough real data to be worth showing
     function isValidChart(live) {
@@ -1124,13 +1132,13 @@ window.KEYN_DRUM=(function(){
           try {
             const live = await window.KeynYahoo.fetchYahooChart(symbol, '5m', '1d');
             if (!isValidChart(live)) {
-              console.warn(`[KEYN movers] ${symbol} skipped — only ${live?.prices?.length ?? 0} candles`);
+              console.warn(`[KEYN movers] ${symbol} skipped: only ${live?.prices?.length ?? 0} candles`);
               continue;
             }
             const isUp = live.currentPrice >= live.open;
             freshSlots.push({ name: symbol, prices: live.prices, times: live.times, open: live.open, dir: isUp ? 'up' : 'dn' });
           } catch(e) {
-            console.warn(`[KEYN movers] ${symbol} skipped — ${e.message}`);
+            console.warn(`[KEYN movers] ${symbol} skipped: ${e.message}`);
           }
         }
 
@@ -1141,7 +1149,7 @@ window.KEYN_DRUM=(function(){
           }
           CACHE[cat] = [...LIVE[cat]];
         } else if (CACHE[cat]) {
-          console.warn(`[KEYN movers] ${cat} fetch empty — restoring from cache`);
+          console.warn(`[KEYN movers] ${cat} fetch empty: restoring from cache`);
           LIVE[cat] = [...CACHE[cat]];
         }
 
@@ -1155,7 +1163,7 @@ window.KEYN_DRUM=(function(){
       }
     }
 
-    // ── Hourly refresh ────────────────────────────────────────────────────────
+    // Hourly refresh
     setInterval(() => {
       loadCategoryLive('risers');
       delay(2000).then(() => loadCategoryLive('fallers'));
@@ -1296,7 +1304,7 @@ window.KEYN_DRUM=(function(){
 
     async function loadLiveMeters() {
       try {
-        // F&G — CNN via Flask proxy
+        // F&G — CNN
         const fgRes  = await fetch('/api/feargreed');
         if (fgRes.ok) {
           const fgData = await fgRes.json();
