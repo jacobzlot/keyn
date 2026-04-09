@@ -717,6 +717,13 @@ window.KEYN_DRUM=(function(){
       });
 
       switchCategory('metals');
+
+      // Pre-fetch all other commodity categories in the background so they're
+      // ready instantly when the user clicks the tab — no load wait.
+      Promise.resolve()
+        .then(() => delay(800).then(() => prefetchCategory('energy')))
+        .then(() => delay(800).then(() => prefetchCategory('agri')))
+        .then(() => delay(800).then(() => prefetchCategory('crypto')));
     });
   })();
 
@@ -1057,7 +1064,6 @@ window.KEYN_DRUM=(function(){
     // ── Live data fetchers ────────────────────────────────────────────────────
 
     async function fetchScreener(scrId) {
-      // Always route through the Flask backend — it handles CORS and auth.
       const url = `/api/screener?id=${scrId}&count=10`;
       const res = await fetch(url);
       if (!res.ok) throw new Error(`Screener HTTP ${res.status}`);
@@ -1072,8 +1078,6 @@ window.KEYN_DRUM=(function(){
     }
 
     async function fetchIPOs() {
-      // Fetch up to 3 months of PRICED IPOs to build a large candidate pool.
-      // Upcoming IPOs never have Yahoo chart data, so we skip them entirely.
       const allRows = [];
       const now = new Date();
       for (let m = 0; m < 3; m++) {
@@ -1083,7 +1087,6 @@ window.KEYN_DRUM=(function(){
           const res = await fetch(`/api/ipos?month=${monthStr}`);
           if (!res.ok) continue;
           const data = await res.json();
-          // Priced only — these are already trading and have Yahoo chart history
           const priced = data?.data?.priced?.rows || [];
           allRows.push(...priced);
         } catch(e) { /* skip month on error */ }
@@ -1101,7 +1104,7 @@ window.KEYN_DRUM=(function(){
 
     async function loadCategoryLive(cat) {
       try {
-        let candidates = []; // full list to walk through
+        let candidates = [];
 
         if (cat === 'risers') {
           const s = await fetchScreener('day_gainers');
@@ -1114,7 +1117,6 @@ window.KEYN_DRUM=(function(){
           candidates = ipos.map(i => ({ symbol: i.symbol, name: i.name, screener: null }));
         }
 
-        // Walk candidates until we have 4 valid chart slots filled
         const freshSlots = [];
         for (let i = 0; i < candidates.length && freshSlots.length < 4; i++) {
           if (i > 0) await delay(350);
@@ -1126,37 +1128,26 @@ window.KEYN_DRUM=(function(){
               continue;
             }
             const isUp = live.currentPrice >= live.open;
-            freshSlots.push({
-              name:   symbol,
-              prices: live.prices,
-              times:  live.times,
-              open:   live.open,
-              dir:    isUp ? 'up' : 'dn',
-            });
+            freshSlots.push({ name: symbol, prices: live.prices, times: live.times, open: live.open, dir: isUp ? 'up' : 'dn' });
           } catch(e) {
             console.warn(`[KEYN movers] ${symbol} skipped — ${e.message}`);
           }
         }
 
         if (freshSlots.length > 0) {
-          // We got at least some live data — fill slots and persist to cache
           for (let slot = 0; slot < 4; slot++) {
             if (freshSlots[slot]) LIVE[cat][slot] = freshSlots[slot];
-            else if (CACHE[cat]?.[slot]) LIVE[cat][slot] = CACHE[cat][slot]; // pad with cached
+            else if (CACHE[cat]?.[slot]) LIVE[cat][slot] = CACHE[cat][slot];
           }
-          CACHE[cat] = [...LIVE[cat]]; // update cache with best available data
+          CACHE[cat] = [...LIVE[cat]];
         } else if (CACHE[cat]) {
-          // Fresh fetch yielded nothing — restore from cache so card stays populated
           console.warn(`[KEYN movers] ${cat} fetch empty — restoring from cache`);
           LIVE[cat] = [...CACHE[cat]];
         }
-        // else: first load, no cache yet — placeholders remain (expected on cold start)
 
         if (activeCat === cat) renderItem(activeItemIndex);
-
       } catch(e) {
         console.warn(`[KEYN movers] ${cat} load failed:`, e.message);
-        // On total failure restore from cache if available
         if (CACHE[cat]) {
           LIVE[cat] = [...CACHE[cat]];
           if (activeCat === cat) renderItem(activeItemIndex);
@@ -1164,7 +1155,7 @@ window.KEYN_DRUM=(function(){
       }
     }
 
-    // ── Hourly refresh — re-fetches all categories every 60 minutes ───────────
+    // ── Hourly refresh ────────────────────────────────────────────────────────
     setInterval(() => {
       loadCategoryLive('risers');
       delay(2000).then(() => loadCategoryLive('fallers'));
@@ -1218,9 +1209,6 @@ window.KEYN_DRUM=(function(){
     const INACTIVE_POS = [[22,32,42],[0,32,42],[0,10,42],[0,10,20]];
     const NEEDLE_LEFT = 98.32, NEEDLE_TOP = 20.88, PIVOT_X = 3.464, PIVOT_Y = 61.622;
     const ANIM_DUR = 850;
-    const IS_LOCAL = ['localhost','127.0.0.1'].includes(location.hostname);
-    const YH_BASE  = 'https://query1.finance.yahoo.com';
-    const CP       = 'https://corsproxy.io/?';
 
     function valToRot(value, min, max) {
       const pct = Math.max(0, Math.min(1, (value - min) / (max - min)));
@@ -1297,12 +1285,7 @@ window.KEYN_DRUM=(function(){
     // ── Live data fetchers ────────────────────────────────────────────────────
 
     async function yahooChart(symbol) {
-      const path   = `/v8/finance/chart/${encodeURIComponent(symbol)}`;
-      const params = `interval=1d&range=5d&includePrePost=false`;
-      const target = `${YH_BASE}${path}?${params}`;
-      const url    = IS_LOCAL
-        ? `${CP}${encodeURIComponent(target)}`
-        : `/api/yahoo?path=${encodeURIComponent(path)}&${params}`;
+      const url = `/api/chart?symbol=${encodeURIComponent(symbol)}&interval=1d&range=5d`;
       const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
@@ -1313,11 +1296,8 @@ window.KEYN_DRUM=(function(){
 
     async function loadLiveMeters() {
       try {
-        // F&G — CNN
-        const fgUrl = IS_LOCAL
-          ? `${CP}${encodeURIComponent('https://production.dataviz.cnn.io/index/fearandgreed/graphdata')}`
-          : 'https://production.dataviz.cnn.io/index/fearandgreed/graphdata';
-        const fgRes  = await fetch(fgUrl);
+        // F&G — CNN via Flask proxy
+        const fgRes  = await fetch('/api/feargreed');
         if (fgRes.ok) {
           const fgData = await fgRes.json();
           const score  = fgData?.fear_and_greed?.score;
