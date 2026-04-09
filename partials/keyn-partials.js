@@ -65,9 +65,7 @@
           <div class="search-spacer"></div>
           <div class="search-container" id="search-container">
             <div class="search-input-row">
-              <img class="search-icon"
-                   src="https://www.figma.com/api/mcp/asset/fd139b27-eea2-459f-a327-a1be28ce6890"
-                   alt="search" />
+              <img class="search-icon" src="svg/search.svg" alt="search" />
               <input class="search-input"
                      id="search-input"
                      type="text"
